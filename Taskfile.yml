@@ -3,6 +3,8 @@ version: '3'
 vars:
   FRONTEND_DIR: frontend
   BACKEND_DIR: backend
+  PROD_HOST: vpsjim
+  PROD_DB_PATH: ~/pingmaster/data/sql_app.db
 
 tasks:
   install:
@@ -97,3 +99,21 @@ tasks:
     dir: '{{.BACKEND_DIR}}'
     cmds:
       - docker-compose down
+
+  db:download:
+    desc: Download the production database
+    cmds:
+      - mkdir -p {{.BACKEND_DIR}}/data
+      - scp {{.PROD_HOST}}:{{.PROD_DB_PATH}} {{.BACKEND_DIR}}/data/prod_db.db
+      - echo "Production database downloaded to {{.BACKEND_DIR}}/data/prod_db.db"
+
+  db:view:
+    desc: Open the downloaded production database in VS Code
+    cmds:
+      - code {{.BACKEND_DIR}}/data/prod_db.db
+
+  db:manage:
+    desc: Download and view the production database
+    cmds:
+      - task: db:download
+      - task: db:view

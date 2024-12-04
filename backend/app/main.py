@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from app.api.endpoints import hello
+from app.api.endpoints import hello, messages
+from app.db.session import init_db
 
 app = FastAPI(
     title="MonitoringDashboard API",
@@ -7,5 +8,9 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# Include routers
+@app.on_event("startup")
+def startup_event():
+    init_db()
+
 app.include_router(hello.router, prefix="/api")
+app.include_router(messages.router, prefix="/api")
