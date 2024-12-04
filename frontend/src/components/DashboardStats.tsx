@@ -98,7 +98,8 @@ export default function DashboardStats() {
   const stats = {
     totalServices: services.length,
     upPercentage: calculateUpPercentage(services),
-    avgResponseTime: calculateAvgResponseTime(services)
+    avgResponseTime: calculateAvgResponseTime(services),
+    totalChecks: calculateTotalChecks(services)
   };
 
   if (loading) {
@@ -126,8 +127,9 @@ export default function DashboardStats() {
         <p className="mt-2 text-3xl font-semibold text-gray-900">{stats.avgResponseTime}ms</p>
       </div>
       
-      <div className="bg-white p-6 rounded-lg shadow-sm md:col-span-1">
-        <Line options={options} data={mockData} />
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <h3 className="text-sm font-medium text-gray-500">Total Checks</h3>
+        <p className="mt-2 text-3xl font-semibold text-gray-900">{stats.totalChecks}</p>
       </div>
     </div>
   );
@@ -153,4 +155,10 @@ function calculateAvgResponseTime(services: ApiService[]): number {
   
   const sum = responseTimes.reduce((acc, time) => acc + time, 0);
   return Math.round(sum / responseTimes.length);
+}
+
+function calculateTotalChecks(services: ApiService[]): number {
+  return services.reduce((total, service) => {
+    return total + (service.stats?.length || 0);
+  }, 0);
 }
