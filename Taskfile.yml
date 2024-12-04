@@ -5,6 +5,7 @@ vars:
   BACKEND_DIR: backend
   PROD_HOST: vpsjim
   PROD_DB_PATH: ~/pingmaster/data/sql_app.db
+  CONTAINER_NAME: pingmaster_api_1
 
 tasks:
   install:
@@ -110,10 +111,27 @@ tasks:
   db:view:
     desc: Open the downloaded production database in VS Code
     cmds:
-      - code {{.BACKEND_DIR}}/data/prod_db.db
+      - cursor {{.BACKEND_DIR}}/data/prod_db.db
 
   db:manage:
     desc: Download and view the production database
     cmds:
       - task: db:download
       - task: db:view
+
+  debug:prod:db:
+    desc: Debug production database issues
+    cmds:
+      - ssh {{.PROD_HOST}} "docker logs {{.CONTAINER_NAME}}"
+      - ssh {{.PROD_HOST}} "ls -la ~/pingmaster/data"
+      - ssh {{.PROD_HOST}} "docker exec {{.CONTAINER_NAME}} ls -la /app/data"
+
+  logs:prod:
+    desc: View production logs
+    cmds:
+      - ssh {{.PROD_HOST}} "docker logs {{.CONTAINER_NAME}}"
+
+  exec:prod:
+    desc: Execute command in production container
+    cmds:
+      - ssh {{.PROD_HOST}} "docker exec -it {{.CONTAINER_NAME}} bash"

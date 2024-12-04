@@ -13,6 +13,7 @@ services:
       - "8000:8000"
     volumes:
       - ./data:/app/data
+    user: "${UID}:${GID}"
     networks:
       - api_network
     # healthcheck:

@@ -1,7 +1,12 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+import os
 
-SQLITE_URL = "sqlite:///./sql_app.db"
+# Créer le répertoire data s'il n'existe pas
+DATA_DIR = "/app/data"
+os.makedirs(DATA_DIR, exist_ok=True)
+
+SQLITE_URL = f"sqlite:///{DATA_DIR}/sql_app.db"
 
 engine = create_engine(SQLITE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
