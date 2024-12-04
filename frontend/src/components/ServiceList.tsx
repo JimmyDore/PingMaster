@@ -77,6 +77,9 @@ export default function ServiceList() {
 
       // Refresh the services list
       fetchServices();
+      
+      // Dispatch event to refresh other components
+      document.dispatchEvent(new CustomEvent('refreshServices'));
     } catch (err) {
       console.error('Error deleting service:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete service');
