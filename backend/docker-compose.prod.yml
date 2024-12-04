@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: pingmaster-api:latest
+    restart: always
+    environment:
+      - ENV_FILE=.env.prod
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    networks:
+      - api_network
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+
+networks:
+  api_network:
+    driver: bridge

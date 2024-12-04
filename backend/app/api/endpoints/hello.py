@@ -4,4 +4,4 @@ router = APIRouter()
 
 @router.get("/hello")
 async def read_hello():
-    return {"message": "coucou"}
+    return {"message": "coucou jimmy"}
