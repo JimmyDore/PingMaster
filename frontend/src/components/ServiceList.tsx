@@ -152,7 +152,15 @@ export default function ServiceList() {
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{service.name}</div>
-                    <div className="text-sm text-gray-500">{service.url}</div>
+                    <a 
+                      href={service.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                      {service.url}
+                    </a>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
