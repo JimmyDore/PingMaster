@@ -43,7 +43,7 @@ interface PerformanceChartProps {
 }
 
 export default function PerformanceChart({ stats }: PerformanceChartProps) {
-  const [selectedPeriod, setSelectedPeriod] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
+  const [selectedPeriod, setSelectedPeriod] = useState<'1h' | '24h' | '7d' | '30d'>('1h');
   
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);

@@ -23,7 +23,7 @@ export default function ServiceList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<ApiService | null>(null);
-  const [timeRange, setTimeRange] = useState<TimeRange>('24h');
+  const [timeRange, setTimeRange] = useState<TimeRange>('1h');
   const [serviceToDelete, setServiceToDelete] = useState<ApiService | null>(null);
 
   const fetchServices = async () => {
