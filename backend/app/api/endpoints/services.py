@@ -5,7 +5,9 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from app.db.session import get_db
 from app.db.models import Service, RefreshFrequency, ServiceStats
-from app.api.models.service import ServiceCreate, ServiceResponse, ServiceStatsCreate, ServiceStatsResponse
+from app.api.models.service import ServiceCreate, ServiceResponse, ServiceStatsCreate, ServiceStatsResponse, ServiceStatsAggregated
+from app.core.monitor import calculate_period_stats
+from datetime import datetime, timedelta
 
 router = APIRouter()
 
@@ -42,7 +44,7 @@ def get_services(db: Session = Depends(get_db)):
     
     return services
 
-@router.post("/services/{service_id}/stats/", response_model=ServiceStatsResponse)
+@router.post("/services/{service_id}/stats/", response_model=ServiceStatsResponse, status_code=201)
 def create_service_stats(
     service_id: UUID,
     stats: ServiceStatsCreate,
@@ -84,3 +86,32 @@ def delete_service(
     db.commit()
     
     return None
+
+@router.get("/services/{service_id}/stats/aggregated", 
+           response_model=ServiceStatsAggregated)
+async def get_service_stats_aggregated(
+    service_id: UUID,
+    db: Session = Depends(get_db)
+):
+    service = db.query(Service).filter(Service.id == service_id).first()
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    now = datetime.utcnow()
+    
+    stats_1h = calculate_period_stats(
+        db, service_id, now - timedelta(hours=1), "1h")
+    stats_24h = calculate_period_stats(
+        db, service_id, now - timedelta(hours=24), "24h")
+    stats_7d = calculate_period_stats(
+        db, service_id, now - timedelta(days=7), "7d")
+    stats_30d = calculate_period_stats(
+        db, service_id, now - timedelta(days=30), "30d")
+    
+    return ServiceStatsAggregated(
+        service_id=service_id,
+        stats_1h=stats_1h,
+        stats_24h=stats_24h,
+        stats_7d=stats_7d,
+        stats_30d=stats_30d
+    )

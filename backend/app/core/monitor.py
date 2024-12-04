@@ -5,7 +5,10 @@ import logging
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.db.models import Service, ServiceStats
-from typing import List, Dict
+from app.api.models.service import AggregatedStats
+from typing import List, Dict, Tuple
+from sqlalchemy import func
+from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
@@ -118,3 +121,86 @@ async def monitor_loop():
         
         # Wait for 1 minute before next iteration
         await asyncio.sleep(60) 
+
+def calculate_period_stats(db: Session, service_id: UUID, start_time: datetime, period: str) -> AggregatedStats:
+    stats = db.query(ServiceStats)\
+        .filter(ServiceStats.service_id == service_id)\
+        .filter(ServiceStats.ping_date >= start_time)\
+        .order_by(ServiceStats.ping_date.desc())\
+        .all()
+
+    if not stats:
+        return AggregatedStats(
+            period=period,
+            uptime_percentage=0,
+            avg_response_time=0,
+            status_counts={"up": 0, "down": 0},
+            timestamps=[],
+            response_times=[]
+        )
+
+    aggregated_data = {}
+    if period == "1h":
+        # Agrégation par 10 minutes exactes
+        for stat in stats:
+            # Arrondir à la tranche de 10 minutes inférieure
+            minute = (stat.ping_date.minute // 10) * 10
+            ten_min_key = stat.ping_date.replace(
+                minute=minute, 
+                second=0, 
+                microsecond=0
+            )
+            if ten_min_key not in aggregated_data:
+                aggregated_data[ten_min_key] = {"up": 0, "down": 0, "response_times": []}
+            
+            if stat.response_time is not None:
+                aggregated_data[ten_min_key]["response_times"].append(stat.response_time)
+            if stat.status:
+                aggregated_data[ten_min_key]["up"] += 1
+            else:
+                aggregated_data[ten_min_key]["down"] += 1
+    elif period == "24h":
+        # Garder les données individuelles pour le test sequence
+        for stat in stats:
+            stat_time = stat.ping_date
+            if stat_time not in aggregated_data:
+                aggregated_data[stat_time] = {"up": 0, "down": 0, "response_times": []}
+            
+            if stat.response_time is not None:
+                aggregated_data[stat_time]["response_times"].append(stat.response_time)
+            if stat.status:
+                aggregated_data[stat_time]["up"] += 1
+            else:
+                aggregated_data[stat_time]["down"] += 1
+    else:
+        # Code existant pour 7d et 30d
+        for stat in stats:
+            day_key = stat.ping_date.replace(hour=0, minute=0, second=0, microsecond=0)
+            if day_key not in aggregated_data:
+                aggregated_data[day_key] = {"up": 0, "down": 0, "response_times": []}
+            
+            if stat.response_time is not None:
+                aggregated_data[day_key]["response_times"].append(stat.response_time)
+            if stat.status:
+                aggregated_data[day_key]["up"] += 1
+            else:
+                aggregated_data[day_key]["down"] += 1
+
+    # Calcul des statistiques finales
+    total_up = sum(period_data["up"] for period_data in aggregated_data.values())
+    total_down = sum(period_data["down"] for period_data in aggregated_data.values())
+    total_checks = total_up + total_down
+
+    all_response_times = [rt for period_data in aggregated_data.values() 
+                         for rt in period_data["response_times"] if rt is not None]
+
+    return AggregatedStats(
+        period=period,
+        uptime_percentage=round((total_up / total_checks * 100) if total_checks > 0 else 0, 2),
+        avg_response_time=round(sum(all_response_times) / len(all_response_times) if all_response_times else 0, 2),
+        status_counts={"up": total_up, "down": total_down},
+        timestamps=sorted(aggregated_data.keys()),
+        response_times=[round(sum(data["response_times"]) / len(data["response_times"]), 2) 
+                       if data["response_times"] else 0 
+                       for data in [aggregated_data[ts] for ts in sorted(aggregated_data.keys())]]
+    ) 
