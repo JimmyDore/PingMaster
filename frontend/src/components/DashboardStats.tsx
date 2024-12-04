@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -46,12 +46,68 @@ const options = {
   }
 };
 
+interface ApiService {
+  id: string;
+  name: string;
+  url: string;
+  refresh_frequency: string;
+  stats: {
+    status: boolean;
+    response_time: number;
+    ping_date: string;
+  }[] | null;
+}
+
 export default function DashboardStats() {
-  const stats = {
-    totalServices: 10,
-    upPercentage: 90,
-    avgResponseTime: 280
+  const [services, setServices] = useState<ApiService[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchServices = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/services/`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch services');
+      }
+      const data = await response.json();
+      setServices(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      console.log('Refreshing dashboard stats...');
+      fetchServices();
+    };
+
+    document.addEventListener('refreshServices', handleRefresh);
+
+    return () => {
+      document.removeEventListener('refreshServices', handleRefresh);
+    };
+  }, []);
+
+  const stats = {
+    totalServices: services.length,
+    upPercentage: calculateUpPercentage(services),
+    avgResponseTime: calculateAvgResponseTime(services)
+  };
+
+  if (loading) {
+    return <div className="animate-pulse">Loading stats...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-600">Error: {error}</div>;
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -75,4 +131,26 @@ export default function DashboardStats() {
       </div>
     </div>
   );
+}
+
+function calculateUpPercentage(services: ApiService[]): number {
+  if (services.length === 0) return 0;
+  
+  const servicesWithStats = services.filter(service => service.stats && service.stats.length > 0);
+  if (servicesWithStats.length === 0) return 0;
+  
+  const upServices = servicesWithStats.filter(service => service.stats![0].status);
+  return Math.round((upServices.length / servicesWithStats.length) * 100);
+}
+
+function calculateAvgResponseTime(services: ApiService[]): number {
+  const responseTimes = services
+    .filter(service => service.stats && service.stats.length > 0)
+    .map(service => service.stats![0].response_time)
+    .filter(time => time !== null);
+
+  if (responseTimes.length === 0) return 0;
+  
+  const sum = responseTimes.reduce((acc, time) => acc + time, 0);
+  return Math.round(sum / responseTimes.length);
 }
