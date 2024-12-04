@@ -1,9 +1,11 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from uuid import UUID
 from app.db.session import get_db
-from app.db.models import Service, RefreshFrequency
-from app.api.models.service import ServiceCreate, ServiceResponse
+from app.db.models import Service, RefreshFrequency, ServiceStats
+from app.api.models.service import ServiceCreate, ServiceResponse, ServiceStatsCreate, ServiceStatsResponse
 
 router = APIRouter()
 
@@ -24,3 +26,43 @@ def create_service(
     db.commit()
     db.refresh(db_service)
     return db_service
+
+@router.get("/services/", response_model=List[ServiceResponse])
+def get_services(db: Session = Depends(get_db)):
+    services = db.query(Service).all()
+    
+    # Pour chaque service, on récupère toutes ses stats triées par date
+    for service in services:
+        stats = db.query(ServiceStats)\
+            .filter(ServiceStats.service_id == service.id)\
+            .order_by(desc(ServiceStats.ping_date))\
+            .all()
+        
+        service.stats = stats
+    
+    return services
+
+@router.post("/services/{service_id}/stats/", response_model=ServiceStatsResponse)
+def create_service_stats(
+    service_id: UUID,
+    stats: ServiceStatsCreate,
+    db: Session = Depends(get_db)
+):
+    # Verify that service exists
+    service = db.query(Service).filter(Service.id == service_id).first()
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    # Create stats
+    db_stats = ServiceStats(
+        service_id=service_id,
+        status=stats.status,
+        response_time=stats.response_time,
+        ping_date=stats.ping_date
+    )
+    
+    db.add(db_stats)
+    db.commit()
+    db.refresh(db_stats)
+    
+    return db_stats
