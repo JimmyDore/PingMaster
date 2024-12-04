@@ -54,6 +54,30 @@ export default function ServiceList() {
     };
   }, []);
 
+  const handleDelete = async (serviceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!confirm('Are you sure you want to delete this service?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/services/${serviceId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete service');
+      }
+
+      // Refresh the services list
+      fetchServices();
+    } catch (err) {
+      console.error('Error deleting service:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete service');
+    }
+  };
+
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-sm p-6">
@@ -147,7 +171,7 @@ export default function ServiceList() {
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Handle delete
+                        handleDelete(service.id, e);
                       }} 
                       className="text-red-600 hover:text-red-900"
                     >

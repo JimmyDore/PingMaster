@@ -187,3 +187,29 @@ def test_get_services_with_multiple_stats(client: TestClient, test_db: Session):
     first_date = datetime.fromisoformat(service_data["stats"][0]["ping_date"])
     second_date = datetime.fromisoformat(service_data["stats"][1]["ping_date"])
     assert first_date > second_date
+
+def test_delete_service(client: TestClient):
+    # Create a test service first
+    service_response = client.post(
+        "/api/services/",
+        json={
+            "name": "Test Service",
+            "url": "https://example.com",
+            "refresh_frequency": RefreshFrequency.ONE_HOUR
+        }
+    )
+    assert service_response.status_code == 201
+    service_id = service_response.json()["id"]
+    
+    # Delete the service
+    delete_response = client.delete(f"/api/services/{service_id}")
+    assert delete_response.status_code == 204
+    
+    # Verify service is deleted
+    get_response = client.get("/api/services/")
+    assert get_response.status_code == 200
+    assert len(get_response.json()) == 0
+
+def test_delete_nonexistent_service(client: TestClient):
+    response = client.delete(f"/api/services/{uuid4()}")
+    assert response.status_code == 404

@@ -66,3 +66,21 @@ def create_service_stats(
     db.refresh(db_stats)
     
     return db_stats
+
+@router.delete("/services/{service_id}", status_code=204)
+def delete_service(
+    service_id: UUID,
+    db: Session = Depends(get_db)
+):
+    service = db.query(Service).filter(Service.id == service_id).first()
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    # Delete associated stats first (due to foreign key constraint)
+    db.query(ServiceStats).filter(ServiceStats.service_id == service_id).delete()
+    
+    # Delete the service
+    db.delete(service)
+    db.commit()
+    
+    return None
