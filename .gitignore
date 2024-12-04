@@ -3,9 +3,22 @@ frontend/dist/
 frontend/.output/
 frontend/.astro/
 
-# Backend specific (preparing for future)
-backend/dist/
-backend/build/
+# Backend specific
+venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/.pytest_cache/
+backend/.coverage
+backend/htmlcov/
+backend/*.pyc
+backend/**/*.pyc
+backend/*.pyo
+backend/**/*.pyo
+backend/*.pyd
+backend/**/*.pyd
+backend/.Python
+backend/*.db
+backend/*.sqlite3
 
 # Dependencies
 **/node_modules/

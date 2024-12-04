@@ -2,13 +2,14 @@ version: '3'
 
 vars:
   FRONTEND_DIR: frontend
+  BACKEND_DIR: backend
 
 tasks:
   install:
     desc: Installe toutes les dépendances du projet
     cmds:
       - task: install:frontend
-      # - task: install:backend  # À décommenter quand le backend sera ajouté
+      - task: install:backend
 
   install:frontend:
     desc: Installe les dépendances du frontend
@@ -16,23 +17,58 @@ tasks:
     cmds:
       - npm install
 
+  install:backend:
+    desc: Installe les dépendances du backend
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - pip install -r requirements.txt
+
   dev:
+    desc: Lance les serveurs de développement
+    cmds:
+      - task: dev:frontend
+      - task: dev:backend
+
+  dev:frontend:
     desc: Lance le serveur de développement frontend
     dir: '{{.FRONTEND_DIR}}'
     cmds:
       - npm run dev
 
+  dev:backend:
+    desc: Lance le serveur de développement backend
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - ../venv/bin/uvicorn app.main:app --reload --port 8000
+
   build:
     desc: Build le projet
     cmds:
       - task: build:frontend
-      # - task: build:backend  # À décommenter quand le backend sera ajouté
+      - task: build:backend
 
   build:frontend:
     desc: Build le frontend
     dir: '{{.FRONTEND_DIR}}'
     cmds:
       - npm run build
+
+  build:backend:
+    desc: Build le backend
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - docker build -t monitoring-dashboard-api .
+
+  test:
+    desc: Lance tous les tests
+    cmds:
+      - task: test:backend
+
+  test:backend:
+    desc: Lance les tests backend
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - ../venv/bin/pytest
 
   preview:
     desc: Preview la build du frontend
@@ -45,3 +81,19 @@ tasks:
     cmds:
       - rm -rf {{.FRONTEND_DIR}}/dist
       - rm -rf {{.FRONTEND_DIR}}/node_modules
+      - rm -rf venv
+      - rm -rf {{.BACKEND_DIR}}/__pycache__
+      - rm -rf {{.BACKEND_DIR}}/.pytest_cache
+      - rm -f {{.BACKEND_DIR}}/sql_app.db
+
+  docker:up:
+    desc: Lance les conteneurs Docker
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - docker-compose up
+
+  docker:down:
+    desc: Arrête les conteneurs Docker
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - docker-compose down
