@@ -34,6 +34,9 @@ export default function ServiceList() {
       }
       const data = await response.json();
       setServices(data);
+      if (!selectedService && data.length > 0) {
+        setSelectedService(data[0]);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
