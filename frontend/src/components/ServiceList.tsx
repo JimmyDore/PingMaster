@@ -147,15 +147,6 @@ export default function ServiceList() {
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Handle edit
-                      }} 
-                      className="text-primary-600 hover:text-primary-900 mr-4"
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
                         // Handle delete
                       }} 
                       className="text-red-600 hover:text-red-900"
