@@ -2,7 +2,7 @@ import logging
 import os
 from fastapi import FastAPI
 from app.api.endpoints import hello, messages
-from app.db.session import init_db, SQLITE_URL
+from app.db.session import init_db, SQLITE_URL, DATA_DIR
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,7 +17,11 @@ app = FastAPI(
 def startup_event():
     logger.info(f"Using database at: {SQLITE_URL}")
     logger.info(f"Current directory: {os.getcwd()}")
-    logger.info(f"Directory contents of /app/data: {os.listdir('/app/data')}")
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        logger.info(f"Directory contents of {DATA_DIR}: {os.listdir(DATA_DIR)}")
+    except Exception as e:
+        logger.error(f"Error accessing data directory: {str(e)}")
     init_db()
     logger.info("Database initialized")
 

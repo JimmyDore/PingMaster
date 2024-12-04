@@ -19,7 +19,7 @@ backend/**/*.pyd
 backend/.Python
 backend/*.db
 backend/*.sqlite3
-backend/data/prod_db.db
+backend/data/*.db
 
 # Dependencies
 **/node_modules/

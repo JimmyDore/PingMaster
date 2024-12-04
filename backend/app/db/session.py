@@ -6,8 +6,12 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Créer le répertoire data s'il n'existe pas
-DATA_DIR = "/app/data"
+# Définir le répertoire data en fonction de l'environnement
+if os.getenv('ENVIRONMENT') == 'production':
+    DATA_DIR = "/app/data"
+else:
+    DATA_DIR = "./data"  # Chemin relatif pour le développement
+
 try:
     os.makedirs(DATA_DIR, exist_ok=True)
     logger.info(f"Data directory created/verified at: {DATA_DIR}")
