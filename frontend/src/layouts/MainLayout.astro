@@ -1,0 +1,27 @@
+---
+import Navbar from '../components/Navbar.astro';
+
+interface Props {
+  title: string;
+  protected?: boolean;
+}
+
+const { title, protected: isProtected = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Global Monitoring Dashboard" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} | Monitoring Dashboard</title>
+  </head>
+  <body class="min-h-screen bg-gray-50">
+    <Navbar />
+    <main class="container mx-auto px-4 py-8">
+      <slot />
+    </main>
+  </body>
+</html>

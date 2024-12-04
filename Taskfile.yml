@@ -1,0 +1,47 @@
+version: '3'
+
+vars:
+  FRONTEND_DIR: frontend
+
+tasks:
+  install:
+    desc: Installe toutes les dépendances du projet
+    cmds:
+      - task: install:frontend
+      # - task: install:backend  # À décommenter quand le backend sera ajouté
+
+  install:frontend:
+    desc: Installe les dépendances du frontend
+    dir: '{{.FRONTEND_DIR}}'
+    cmds:
+      - npm install
+
+  dev:
+    desc: Lance le serveur de développement frontend
+    dir: '{{.FRONTEND_DIR}}'
+    cmds:
+      - npm run dev
+
+  build:
+    desc: Build le projet
+    cmds:
+      - task: build:frontend
+      # - task: build:backend  # À décommenter quand le backend sera ajouté
+
+  build:frontend:
+    desc: Build le frontend
+    dir: '{{.FRONTEND_DIR}}'
+    cmds:
+      - npm run build
+
+  preview:
+    desc: Preview la build du frontend
+    dir: '{{.FRONTEND_DIR}}'
+    cmds:
+      - npm run preview
+
+  clean:
+    desc: Nettoie les fichiers générés
+    cmds:
+      - rm -rf {{.FRONTEND_DIR}}/dist
+      - rm -rf {{.FRONTEND_DIR}}/node_modules

@@ -1,0 +1,47 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+---
+
+<MainLayout title="Welcome">
+  <div class="max-w-4xl mx-auto text-center">
+    <h1 class="text-4xl font-bold text-gray-900 mb-8">
+      Global Monitoring Dashboard
+    </h1>
+    
+    <p class="text-xl text-gray-600 mb-12">
+      Monitor your services, APIs, and landing pages in one place. Get instant notifications when something goes wrong.
+    </p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+      <div class="p-6 bg-white rounded-lg shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Service Monitoring</h3>
+        <p class="text-gray-600">Monitor APIs, landing pages, and servers with real-time status updates.</p>
+      </div>
+      
+      <div class="p-6 bg-white rounded-lg shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Instant Alerts</h3>
+        <p class="text-gray-600">Get notified instantly via Slack when services go down or experience issues.</p>
+      </div>
+      
+      <div class="p-6 bg-white rounded-lg shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Detailed Analytics</h3>
+        <p class="text-gray-600">Track uptime, response times, and historical performance data.</p>
+      </div>
+    </div>
+    
+    <div class="flex justify-center space-x-4">
+      <a 
+        href="/login" 
+        class="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium"
+      >
+        Get Started
+      </a>
+      <a 
+        href="/dashboard" 
+        class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium"
+      >
+        View Demo
+      </a>
+    </div>
+  </div>
+</MainLayout>
