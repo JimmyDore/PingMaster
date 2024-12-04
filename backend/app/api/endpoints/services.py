@@ -16,7 +16,7 @@ def create_service(
 ):
     db_service = Service(
         name=service.name,
-        description=service.description,
+        url=str(service.url),
         user_id=MOCK_USER_ID,
         refresh_frequency=service.refresh_frequency
     )

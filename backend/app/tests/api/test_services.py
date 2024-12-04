@@ -10,7 +10,7 @@ def test_create_service(client: TestClient):
         "/api/services/",
         json={
             "name": "Test Service",
-            "description": "Test Description",
+            "url": "https://example.com",
             "refresh_frequency": RefreshFrequency.ONE_HOUR
         }
     )
@@ -18,17 +18,20 @@ def test_create_service(client: TestClient):
     data = response.json()
     assert "id" in data
     assert data["name"] == "Test Service"
-    assert data["description"] == "Test Description"
+    assert data["url"] == "https://example.com/"
     assert str(data["user_id"]) == str(MOCK_USER_ID)
     assert data["refresh_frequency"] == RefreshFrequency.ONE_HOUR.value
 
-def test_create_service_without_description(client: TestClient):
+def test_create_service_invalid_url(client: TestClient):
     response = client.post(
         "/api/services/",
-        json={"name": "Test Service"}
+        json={
+            "name": "Test Service",
+            "url": "not-a-url",
+            "refresh_frequency": RefreshFrequency.ONE_HOUR
+        }
     )
-    assert response.status_code == 201
-    assert response.json()["description"] is None
+    assert response.status_code == 422
 
 def test_create_service_invalid_data(client: TestClient):
     response = client.post(

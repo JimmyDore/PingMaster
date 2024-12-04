@@ -135,3 +135,13 @@ tasks:
     desc: Execute command in production container
     cmds:
       - ssh {{.PROD_HOST}} "docker exec -it {{.CONTAINER_NAME}} bash"
+
+  generate:types:
+    desc: Génère les types TypeScript depuis l'API
+    cmds:
+      # Récupère le schéma OpenAPI
+      - curl http://127.0.0.1:8000/openapi.json > frontend/src/types/openapi.json
+      # Convertit le schéma en types TS
+      - npx openapi-typescript frontend/src/types/openapi.json --output frontend/src/types/api.ts
+    deps:
+      - install:frontend
