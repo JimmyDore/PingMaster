@@ -118,7 +118,7 @@ export default function DashboardStats() {
       </div>
       
       <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h3 className="text-sm font-medium text-gray-500">Uptime</h3>
+        <h3 className="text-sm font-medium text-gray-500">Sites Up</h3>
         <p className="mt-2 text-3xl font-semibold text-green-600">{stats.upPercentage}%</p>
       </div>
       
