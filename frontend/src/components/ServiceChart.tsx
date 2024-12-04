@@ -12,8 +12,7 @@ import {
   TimeScale
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
-import { format } from 'date-fns';
-import type { Service, ServiceStats, TimeRange } from '../types/service';
+import type { Service, TimeRange } from '../types/service';
 
 ChartJS.register(
   CategoryScale,
@@ -25,6 +24,26 @@ ChartJS.register(
   Legend,
   TimeScale
 );
+
+interface AggregatedStats {
+  period: string;
+  uptime_percentage: number;
+  avg_response_time: number;
+  status_counts: {
+    up: number;
+    down: number;
+  };
+  timestamps: string[];
+  response_times: number[];
+}
+
+interface ServiceStats {
+  service_id: string;
+  stats_1h: AggregatedStats;
+  stats_24h: AggregatedStats;
+  stats_7d: AggregatedStats;
+  stats_30d: AggregatedStats;
+}
 
 interface ServiceChartProps {
   service: Service;
@@ -40,17 +59,12 @@ export default function ServiceChart({ service, timeRange, onTimeRangeChange }: 
     const fetchStats = async () => {
       setLoading(true);
       try {
-        // Simulate API call
-        const mockStats: ServiceStats = {
-          timestamps: Array.from({ length: 24 }, (_, i) => 
-            new Date(Date.now() - i * 3600000).toISOString()
-          ).reverse(),
-          status: Array.from({ length: 24 }, () => Math.random() > 0.1 ? 1 : 0),
-          responseTime: Array.from({ length: 24 }, (_, i) => 
-            Math.random() > 0.1 ? Math.floor(Math.random() * 300) + 100 : null
-          )
-        };
-        setStats(mockStats);
+        const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/services/${service.id}/stats/aggregated`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch stats');
+        }
+        const data = await response.json();
+        setStats(data);
       } catch (error) {
         console.error('Error fetching stats:', error);
       } finally {
@@ -59,6 +73,9 @@ export default function ServiceChart({ service, timeRange, onTimeRangeChange }: 
     };
 
     fetchStats();
+    const interval = setInterval(fetchStats, 60000); // Refresh every minute
+    
+    return () => clearInterval(interval);
   }, [service.id, timeRange]);
 
   if (loading || !stats) {
@@ -69,22 +86,19 @@ export default function ServiceChart({ service, timeRange, onTimeRangeChange }: 
     );
   }
 
+  const currentStats = stats[`stats_${timeRange}`];
+
   const data = {
-    labels: stats.timestamps,
+    labels: currentStats.timestamps,
     datasets: [
       {
         label: 'Response Time',
-        data: stats.timestamps.map((timestamp, index) => ({
+        data: currentStats.timestamps.map((timestamp, index) => ({
           x: new Date(timestamp),
-          y: stats.responseTime[index]
+          y: currentStats.response_times[index]
         })),
         borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: stats.status.map(status => 
-          status === 1 ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'
-        ),
-        pointBackgroundColor: stats.status.map(status =>
-          status === 1 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)'
-        ),
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
         tension: 0.1,
         fill: true
       }
@@ -104,13 +118,8 @@ export default function ServiceChart({ service, timeRange, onTimeRangeChange }: 
       tooltip: {
         callbacks: {
           label: (context: any) => {
-            const index = context.dataIndex;
-            const status = stats.status[index];
-            const responseTime = stats.responseTime[index];
-            return [
-              `Status: ${status === 1 ? 'Up' : 'Down'}`,
-              responseTime ? `Response Time: ${responseTime}ms` : 'No Response'
-            ];
+            const responseTime = context.raw.y;
+            return responseTime ? `Response Time: ${responseTime}ms` : 'No Response';
           }
         }
       }
@@ -139,11 +148,16 @@ export default function ServiceChart({ service, timeRange, onTimeRangeChange }: 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">
-          {service.name} - Performance History
-        </h3>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">
+            {service.name} - Performance History
+          </h3>
+          <p className="text-sm text-gray-500">
+            Uptime: {currentStats.uptime_percentage}% | Avg Response: {currentStats.avg_response_time}ms
+          </p>
+        </div>
         <div className="flex space-x-2">
-          {(['24h', '7d', '30d'] as TimeRange[]).map((range) => (
+          {(['1h', '24h', '7d', '30d'] as TimeRange[]).map((range) => (
             <button
               key={range}
               onClick={() => onTimeRangeChange(range)}

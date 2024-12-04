@@ -73,10 +73,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/services/{service_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Service */
+        delete: operations["delete_service_api_services__service_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/services/{service_id}/stats/aggregated": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Service Stats Aggregated */
+        get: operations["get_service_stats_aggregated_api_services__service_id__stats_aggregated_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AggregatedStats */
+        AggregatedStats: {
+            /** Period */
+            period: string;
+            /** Uptime Percentage */
+            uptime_percentage: number;
+            /** Avg Response Time */
+            avg_response_time: number;
+            /** Status Counts */
+            status_counts: {
+                [key: string]: number;
+            };
+            /** Timestamps */
+            timestamps: string[];
+            /** Response Times */
+            response_times: number[];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -142,6 +193,18 @@ export interface components {
              */
             stats: components["schemas"]["ServiceStatsResponse"][] | null;
         };
+        /** ServiceStatsAggregated */
+        ServiceStatsAggregated: {
+            /**
+             * Service Id
+             * Format: uuid4
+             */
+            service_id: string;
+            stats_1h: components["schemas"]["AggregatedStats"];
+            stats_24h: components["schemas"]["AggregatedStats"];
+            stats_7d: components["schemas"]["AggregatedStats"];
+            stats_30d: components["schemas"]["AggregatedStats"];
+        };
         /** ServiceStatsCreate */
         ServiceStatsCreate: {
             /**
@@ -152,25 +215,34 @@ export interface components {
             /** Status */
             status: boolean;
             /** Response Time */
-            response_time: number | null;
+            response_time?: number | null;
             /**
              * Ping Date
              * Format: date-time
-             * @default 2024-12-04T19:11:28.601169
              */
             ping_date: string;
         };
         /** ServiceStatsResponse */
         ServiceStatsResponse: {
+            /**
+             * Service Id
+             * Format: uuid4
+             */
+            service_id: string;
             /** Status */
             status: boolean;
             /** Response Time */
-            response_time: number | null;
+            response_time?: number | null;
             /**
              * Ping Date
              * Format: date-time
              */
             ping_date: string;
+            /**
+             * Id
+             * Format: uuid4
+             */
+            id: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -312,12 +384,72 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["ServiceStatsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_service_api_services__service_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                service_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_service_stats_aggregated_api_services__service_id__stats_aggregated_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                service_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStatsAggregated"];
                 };
             };
             /** @description Validation Error */
