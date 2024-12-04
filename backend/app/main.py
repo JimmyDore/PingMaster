@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.endpoints import hello, messages, services
 from app.db.session import init_db, SQLITE_URL, DATA_DIR
+from app.core.scheduler import init_scheduler
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,6 +47,17 @@ app.add_middleware(
 app.include_router(hello.router, prefix="/api")
 app.include_router(messages.router, prefix="/api")
 app.include_router(services.router, prefix="/api")
+
+@app.on_event("startup")
+async def start_scheduler():
+    """Start the scheduler on application startup"""
+    init_scheduler()
+
+@app.on_event("shutdown")
+async def shutdown_scheduler():
+    """Shut down the scheduler on application shutdown"""
+    from app.core.scheduler import scheduler
+    scheduler.shutdown()
 
 @app.on_event("startup")
 def startup_event():
