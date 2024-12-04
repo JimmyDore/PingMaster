@@ -22,23 +22,36 @@ export default function ServiceList() {
   const [selectedService, setSelectedService] = useState<ApiService | null>(null);
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
 
-  useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/services/`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch services');
-        }
-        const data = await response.json();
-        setServices(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
+  const fetchServices = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/services/`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch services');
       }
+      const data = await response.json();
+      setServices(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      console.log('Refreshing services...');
+      fetchServices();
     };
 
-    fetchServices();
+    document.addEventListener('refreshServices', handleRefresh);
+
+    return () => {
+      document.removeEventListener('refreshServices', handleRefresh);
+    };
   }, []);
 
   if (loading) {

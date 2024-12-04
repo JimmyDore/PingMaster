@@ -46,7 +46,8 @@ export default function ServiceForm({ onSuccess }: ServiceFormProps) {
       const result = await response.json();
       setSubmitStatus('success');
       reset();
-      onSuccess?.();
+      
+      document.dispatchEvent(new CustomEvent('refreshServices'));
       
       setTimeout(() => setSubmitStatus('idle'), 3000);
 
