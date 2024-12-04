@@ -1,0 +1,14 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import MessageForm from '../components/MessageForm';
+---
+
+<MainLayout title="Send Message">
+  <div class="max-w-4xl mx-auto py-8">
+    <h1 class="text-2xl font-bold text-gray-900 mb-8 text-center">
+      Send a Message
+    </h1>
+    
+    <MessageForm client:load />
+  </div>
+</MainLayout> 
