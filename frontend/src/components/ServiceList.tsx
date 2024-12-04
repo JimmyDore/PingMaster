@@ -1,32 +1,76 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import type { Service, TimeRange } from '../types/service';
 import ServiceChart from './ServiceChart';
 
-const mockServices: Service[] = [
-  {
-    id: '1',
-    name: 'Main API',
-    type: 'API',
-    url: 'https://api.example.com',
-    status: 'up',
-    responseTime: 250,
-    lastCheck: new Date()
-  },
-  {
-    id: '2',
-    name: 'Marketing Site',
-    type: 'Landing Page',
-    url: 'https://example.com',
-    status: 'up',
-    responseTime: 800,
-    lastCheck: new Date()
-  }
-];
+interface ApiService {
+  id: string;
+  name: string;
+  url: string;
+  refresh_frequency: string;
+  stats: {
+    status: boolean;
+    response_time: number;
+    ping_date: string;
+  }[] | null;
+}
 
 export default function ServiceList() {
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [services, setServices] = useState<ApiService[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedService, setSelectedService] = useState<ApiService | null>(null);
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/services/`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch services');
+        }
+        const data = await response.json();
+        setServices(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+          <div className="space-y-3">
+            <div className="h-4 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="text-red-600">Error: {error}</div>
+      </div>
+    );
+  }
+
+  if (services.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="text-gray-500 text-center">No services available</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -37,9 +81,6 @@ export default function ServiceList() {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Service
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -56,7 +97,7 @@ export default function ServiceList() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {mockServices.map((service) => (
+              {services.map((service) => (
                 <tr 
                   key={service.id}
                   onClick={() => setSelectedService(service)}
@@ -66,23 +107,28 @@ export default function ServiceList() {
                     <div className="text-sm font-medium text-gray-900">{service.name}</div>
                     <div className="text-sm text-gray-500">{service.url}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {service.type}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      service.status === 'up' 
-                        ? 'bg-green-100 text-green-800' 
+                      service.stats?.[0]?.status
+                        ? 'bg-green-100 text-green-800'
+                        : service.stats === null || service.stats.length === 0
+                        ? 'bg-gray-100 text-gray-800'
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {service.status.toUpperCase()}
+                      {service.stats?.[0]?.status ? 'UP' : service.stats === null || service.stats.length === 0 ? 'NO DATA' : 'DOWN'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {service.responseTime}ms
+                    {service.stats?.[0]?.response_time 
+                      ? `${service.stats[0].response_time}ms`
+                      : '-'
+                    }
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {format(service.lastCheck, 'PPp')}
+                    {service.stats?.[0]?.ping_date
+                      ? format(new Date(service.stats[0].ping_date), 'PPp')
+                      : '-'
+                    }
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button 

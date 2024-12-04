@@ -45,10 +45,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get Services */
+        get: operations["get_services_api_services__get"];
         put?: never;
         /** Create Service */
         post: operations["create_service_api_services__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/services/{service_id}/stats/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Service Stats */
+        post: operations["create_service_stats_api_services__service_id__stats__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -85,8 +103,11 @@ export interface components {
         ServiceCreate: {
             /** Name */
             name: string;
-            /** Description */
-            description?: string | null;
+            /**
+             * Url
+             * Format: uri
+             */
+            url: string;
             /** @default 1 hour */
             refresh_frequency: components["schemas"]["RefreshFrequency"];
         };
@@ -99,8 +120,11 @@ export interface components {
             id: string;
             /** Name */
             name: string;
-            /** Description */
-            description: string | null;
+            /**
+             * Url
+             * Format: uri
+             */
+            url: string;
             /**
              * User Id
              * Format: uuid4
@@ -112,6 +136,41 @@ export interface components {
              */
             created_at: string;
             refresh_frequency: components["schemas"]["RefreshFrequency"];
+            /**
+             * Stats
+             * @default []
+             */
+            stats: components["schemas"]["ServiceStatsResponse"][] | null;
+        };
+        /** ServiceStatsCreate */
+        ServiceStatsCreate: {
+            /**
+             * Service Id
+             * Format: uuid4
+             */
+            service_id: string;
+            /** Status */
+            status: boolean;
+            /** Response Time */
+            response_time: number | null;
+            /**
+             * Ping Date
+             * Format: date-time
+             * @default 2024-12-04T19:11:28.601169
+             */
+            ping_date: string;
+        };
+        /** ServiceStatsResponse */
+        ServiceStatsResponse: {
+            /** Status */
+            status: boolean;
+            /** Response Time */
+            response_time: number | null;
+            /**
+             * Ping Date
+             * Format: date-time
+             */
+            ping_date: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -184,6 +243,26 @@ export interface operations {
             };
         };
     };
+    get_services_api_services__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceResponse"][];
+                };
+            };
+        };
+    };
     create_service_api_services__post: {
         parameters: {
             query?: never;
@@ -204,6 +283,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ServiceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_service_stats_api_services__service_id__stats__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                service_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStatsCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStatsResponse"];
                 };
             };
             /** @description Validation Error */
