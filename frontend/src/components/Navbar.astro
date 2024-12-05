@@ -11,7 +11,7 @@ const currentPath = Astro.url.pathname;
         </a>
       </div>
       
-      <div class="flex space-x-4">
+      <div class="flex space-x-4" id="nav-links">
         <a 
           href="/" 
           class={`px-3 py-2 rounded-md text-sm font-medium ${
@@ -22,9 +22,10 @@ const currentPath = Astro.url.pathname;
         >
           Home
         </a>
+        
         <a 
           href="/dashboard" 
-          class={`px-3 py-2 rounded-md text-sm font-medium ${
+          class={`px-3 py-2 rounded-md text-sm font-medium hidden auth-required ${
             currentPath === '/dashboard' 
               ? 'bg-primary-100 text-primary-700' 
               : 'text-gray-600 hover:text-primary-600'
@@ -32,13 +33,70 @@ const currentPath = Astro.url.pathname;
         >
           Dashboard
         </a>
-        <a 
-          href="/login" 
-          class="px-3 py-2 rounded-md text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
+
+        <div id="auth-buttons" class="flex space-x-4">
+          <a 
+            href="/login" 
+            class={`px-3 py-2 rounded-md text-sm font-medium ${
+              currentPath === '/login'
+                ? 'bg-primary-100 text-primary-700'
+                : 'text-white bg-primary-600 hover:bg-primary-700'
+            }`}
+          >
+            Login
+          </a>
+          <a 
+            href="/signup" 
+            class={`px-3 py-2 rounded-md text-sm font-medium ${
+              currentPath === '/signup'
+                ? 'bg-primary-100 text-primary-700'
+                : 'text-gray-600 hover:text-primary-600'
+            }`}
+          >
+            Sign up
+          </a>
+        </div>
+
+        <button
+          id="logout-button"
+          class="hidden px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-primary-600"
         >
-          Login
-        </a>
+          Logout
+        </button>
       </div>
     </div>
   </div>
 </nav>
+
+<script>
+  import { authService } from '../services/auth';
+
+  function updateNavigation() {
+    const isAuthenticated = authService.isAuthenticated();
+    const authButtons = document.getElementById('auth-buttons');
+    const logoutButton = document.getElementById('logout-button');
+    const authRequiredElements = document.querySelectorAll('.auth-required');
+
+    if (isAuthenticated) {
+      if (authButtons) authButtons.classList.add('hidden');
+      if (logoutButton) logoutButton.classList.remove('hidden');
+      authRequiredElements.forEach(el => el.classList.remove('hidden'));
+    } else {
+      if (authButtons) authButtons.classList.remove('hidden');
+      if (logoutButton) logoutButton.classList.add('hidden');
+      authRequiredElements.forEach(el => el.classList.add('hidden'));
+    }
+  }
+
+  updateNavigation();
+
+  const logoutButton = document.getElementById('logout-button');
+  if (logoutButton) {
+    logoutButton.addEventListener('click', () => {
+      authService.removeToken();
+      window.location.href = '/';
+    });
+  }
+
+  document.addEventListener('auth-changed', updateNavigation);
+</script>
