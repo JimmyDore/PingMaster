@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import type { components } from '../types/api';
+import { fetchWithAuth } from '../utils/api';
 
 type RefreshFrequency = components['schemas']['RefreshFrequency'];
 
@@ -27,7 +28,7 @@ export default function ServiceForm({ onSuccess }: ServiceFormProps) {
     setSubmitStatus('idle');
 
     try {
-      const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/services/`, {
+      const response = await fetchWithAuth(`${import.meta.env.PUBLIC_API_URL}/services/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

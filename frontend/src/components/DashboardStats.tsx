@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import { fetchWithAuth } from '../utils/api';
 
 ChartJS.register(
   CategoryScale,
@@ -65,7 +66,7 @@ export default function DashboardStats() {
 
   const fetchServices = async () => {
     try {
-      const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/services/`);
+      const response = await fetchWithAuth(`${import.meta.env.PUBLIC_API_URL}/services/`);
       if (!response.ok) {
         throw new Error('Failed to fetch services');
       }

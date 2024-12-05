@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchWithAuth } from '../utils/api';
 
 interface MessageResponse {
   id: number;
@@ -15,7 +16,7 @@ export default function MessageForm() {
     setError(null);
     
     try {
-      const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/messages/`, {
+      const res = await fetchWithAuth(`${import.meta.env.PUBLIC_API_URL}/messages/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -34,7 +35,7 @@ export default function MessageForm() {
   };
 
   useEffect(() => {
-    fetch(`${import.meta.env.PUBLIC_API_URL}/hello`)
+    fetchWithAuth(`${import.meta.env.PUBLIC_API_URL}/hello`)
         .then(res => res.json())
         .then(data => console.log('API Response:', data))
         .catch(err => console.error('API Error:', err));

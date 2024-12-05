@@ -28,28 +28,27 @@ export default function ServiceList() {
   const [timeRange, setTimeRange] = useState<TimeRange>('1h');
   const [serviceToDelete, setServiceToDelete] = useState<ApiService | null>(null);
 
+  const fetchServices = async () => {
+    try {
+      const response = await fetchWithAuth(`${import.meta.env.PUBLIC_API_URL}/services/`);
+      if (!response.ok) throw new Error('Failed to fetch services');
+      const data = await response.json();
+      setServices(data);
+      if (!selectedService && data.length > 0) {
+        setSelectedService(data[0]);
+      }
+    } catch (err) {
+      setError('Failed to load services');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!authService.isAuthenticated()) {
       window.location.href = '/login';
       return;
     }
-
-    const fetchServices = async () => {
-      try {
-        const response = await fetchWithAuth(`${import.meta.env.PUBLIC_API_URL}/services/`);
-        if (!response.ok) throw new Error('Failed to fetch services');
-        const data = await response.json();
-        setServices(data);
-        if (!selectedService && data.length > 0) {
-          setSelectedService(data[0]);
-        }
-      } catch (err) {
-        setError('Failed to load services');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchServices();
   }, []);
 
@@ -75,7 +74,7 @@ export default function ServiceList() {
     if (!serviceToDelete) return;
 
     try {
-      const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/services/${serviceToDelete.id}`, {
+      const response = await fetchWithAuth(`${import.meta.env.PUBLIC_API_URL}/services/${serviceToDelete.id}`, {
         method: 'DELETE',
       });
 

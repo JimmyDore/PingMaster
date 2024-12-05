@@ -13,6 +13,7 @@ import {
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 import type { Service, TimeRange } from '../types/service';
+import { fetchWithAuth } from '../utils/api';
 
 ChartJS.register(
   CategoryScale,
@@ -59,7 +60,7 @@ export default function ServiceChart({ service, timeRange, onTimeRangeChange }: 
     const fetchStats = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/services/${service.id}/stats/aggregated`);
+        const response = await fetchWithAuth(`${import.meta.env.PUBLIC_API_URL}/services/${service.id}/stats/aggregated`);
         if (!response.ok) {
           throw new Error('Failed to fetch stats');
         }
