@@ -35,6 +35,12 @@ export default function NotificationModal({
     defaultValues: initialData
   });
 
+  React.useEffect(() => {
+    if (initialData) {
+      reset(initialData);
+    }
+  }, [initialData, reset]);
+
   const handleFormSubmit = async (data: NotificationFormData) => {
     try {
       await onSubmit(data);

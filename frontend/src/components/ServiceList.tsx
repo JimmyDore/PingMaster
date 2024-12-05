@@ -397,7 +397,12 @@ export default function ServiceList() {
         }}
         onSubmit={isEditingNotification ? handleEditNotification : handleAddNotification}
         onDelete={isEditingNotification ? () => handleDeleteNotification(selectedServiceForNotification?.id) : undefined}
-        initialData={selectedServiceForNotification?.notification_preferences}
+        initialData={
+          selectedServiceForNotification?.notification_preferences ? {
+            webhook_url: selectedServiceForNotification.notification_preferences.webhook_url,
+            alert_frequency: selectedServiceForNotification.notification_preferences.alert_frequency.toLowerCase() as 'daily' | 'always'
+          } : undefined
+        }
         title={isEditingNotification ? 'Notification Settings' : 'Add Notification'}
       />
     </div>
