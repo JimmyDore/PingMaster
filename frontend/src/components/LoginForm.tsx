@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { authService, LoginCredentials } from '../services/auth';
+import { authService } from '../services/auth';
+import type { LoginCredentials } from '../services/auth';
 
 export default function LoginForm() {
   const { register, handleSubmit, formState: { errors } } = useForm<LoginCredentials>();

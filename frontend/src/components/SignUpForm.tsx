@@ -7,14 +7,32 @@ export default function SignUpForm() {
   const { register, handleSubmit, formState: { errors } } = useForm<SignUpCredentials>();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [countdown, setCountdown] = useState(3);
 
   const onSubmit = async (data: SignUpCredentials) => {
     setIsLoading(true);
     setError(null);
+    setSuccess(false);
 
     try {
       await authService.signUp(data);
-      window.location.href = '/login?registered=true';
+      setSuccess(true);
+      
+      // Start countdown
+      let count = 3;
+      setCountdown(count);
+      
+      const timer = setInterval(() => {
+        count -= 1;
+        setCountdown(count);
+        
+        if (count === 0) {
+          clearInterval(timer);
+          window.location.href = '/login?registered=true';
+        }
+      }, 1000);
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign up failed');
     } finally {
@@ -32,6 +50,7 @@ export default function SignUpForm() {
           {...register('username', { required: 'Username is required' })}
           type="text"
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+          disabled={success}
         />
         {errors.username && (
           <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
@@ -52,6 +71,7 @@ export default function SignUpForm() {
           })}
           type="password"
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+          disabled={success}
         />
         {errors.password && (
           <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
@@ -64,10 +84,18 @@ export default function SignUpForm() {
         </div>
       )}
 
+      {success && (
+        <div className="rounded-md bg-green-50 p-4">
+          <p className="text-sm text-green-700">
+            Account created successfully! Redirecting in {countdown} seconds...
+          </p>
+        </div>
+      )}
+
       <button
         type="submit"
-        disabled={isLoading}
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+        disabled={isLoading || success}
+        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
         {isLoading ? 'Creating account...' : 'Sign up'}
       </button>
