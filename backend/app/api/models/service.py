@@ -3,6 +3,8 @@ from datetime import datetime
 from app.db.models import RefreshFrequency
 from typing import List, Optional
 
+from app.api.models.notification import NotificationPreferenceResponse
+
 class ServiceCreate(BaseModel):
     name: str
     url: HttpUrl
@@ -34,7 +36,7 @@ class ServiceResponse(BaseModel):
     created_at: datetime
     refresh_frequency: RefreshFrequency
     stats: Optional[List[ServiceStatsResponse]] = []
-
+    notification_preferences: Optional[NotificationPreferenceResponse] = None
     class Config:
         from_attributes = True
 

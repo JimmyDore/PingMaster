@@ -75,12 +75,12 @@ async def test_ping_service_connection_error(mock_service):
 
 # Tests pour process_service_batch
 @pytest.mark.asyncio
-async def test_process_service_batch(mock_services):
+async def test_process_service_batch(mock_services, test_db):
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
     
     with patch('app.core.monitor.ping_service', new_callable=AsyncMock) as mock_ping:
         mock_ping.return_value = (True, 100.0)
-        results = await process_service_batch(mock_services, semaphore)
+        results = await process_service_batch(mock_services, semaphore, test_db)
         
         assert len(results) == len(mock_services)
         for result in results:
@@ -89,7 +89,7 @@ async def test_process_service_batch(mock_services):
             assert result.response_time == 100.0
 
 @pytest.mark.asyncio
-async def test_process_service_batch_with_mixed_results(mock_services):
+async def test_process_service_batch_with_mixed_results(mock_services, test_db):
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
     
     async def mock_ping_with_varying_results(service):
@@ -98,7 +98,7 @@ async def test_process_service_batch_with_mixed_results(mock_services):
         return True, 100.0
     
     with patch('app.core.monitor.ping_service', side_effect=mock_ping_with_varying_results):
-        results = await process_service_batch(mock_services, semaphore)
+        results = await process_service_batch(mock_services, semaphore, test_db)
         
         success_count = len([r for r in results if r.status])
         failure_count = len([r for r in results if not r.status])

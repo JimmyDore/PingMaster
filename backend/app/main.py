@@ -2,7 +2,7 @@ import logging
 import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.endpoints import hello, messages, services, auth
+from app.api.endpoints import hello, messages, services, auth, notifications
 from app.db.session import init_db, SQLITE_URL, DATA_DIR
 from app.core.scheduler import init_scheduler
 
@@ -48,6 +48,7 @@ app.include_router(hello.router, prefix="/api")
 app.include_router(messages.router, prefix="/api")
 app.include_router(services.router, prefix="/api")
 app.include_router(auth.router, prefix="/api/auth")
+app.include_router(notifications.router, prefix="/api")
 
 @app.on_event("startup")
 async def start_scheduler():

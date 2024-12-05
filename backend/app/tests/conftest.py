@@ -16,7 +16,7 @@ def test_db():
     """Fixture that provides a test database session"""
     engine = create_engine(SQLITE_TEST_URL, connect_args={"check_same_thread": False})
     Base.metadata.create_all(bind=engine)
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
     
     db = TestingSessionLocal()
     try:

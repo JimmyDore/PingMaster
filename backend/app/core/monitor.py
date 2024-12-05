@@ -9,6 +9,7 @@ from app.api.models.service import AggregatedStats
 from typing import List, Dict, Tuple
 from sqlalchemy import func
 from uuid import UUID
+from app.core.notifications import send_service_notification
 
 logger = logging.getLogger(__name__)
 
@@ -31,17 +32,33 @@ async def ping_service(service: Service) -> tuple[bool, float | None]:
         logger.error(f"Error pinging service {service.name}: {str(e)}")
         return False, None
 
-async def process_service_batch(services: List[Service], semaphore: asyncio.Semaphore) -> List[ServiceStats]:
+async def process_service_batch(services: List[Service], semaphore: asyncio.Semaphore, db: Session) -> List[ServiceStats]:
     """Process a batch of services concurrently with rate limiting."""
     async def process_single_service(service: Service) -> ServiceStats:
         async with semaphore:
+            previous_stat = db.query(ServiceStats)\
+                .filter(ServiceStats.service_id == service.id)\
+                .order_by(ServiceStats.ping_date.desc())\
+                .first()
             status, response_time = await ping_service(service)
-            return ServiceStats(
+            
+            new_stat = ServiceStats(
                 service_id=service.id,
                 status=status,
                 response_time=response_time,
                 ping_date=datetime.utcnow()
             )
+
+            await send_service_notification(
+                db,
+                service.name,
+                not status,  # is_down
+                new_stat,
+                previous_stat,
+                service.notification_preferences,
+            )
+
+            return new_stat
 
     # Traite les services en parallèle avec le sémaphore
     tasks = [process_single_service(service) for service in services]
@@ -74,7 +91,7 @@ async def check_services(db: Session) -> None:
         # Traite les services par lots
         for i in range(0, len(services_to_check), BATCH_SIZE):
             batch = services_to_check[i:i + BATCH_SIZE]
-            results = await process_service_batch(batch, semaphore)
+            results = await process_service_batch(batch, semaphore, db)
             
             # Filtre les résultats valides et les ajoute à la base de données
             valid_stats = [r for r in results if isinstance(r, ServiceStats)]
