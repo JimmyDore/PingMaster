@@ -55,6 +55,7 @@ async def send_service_notification(
     new_stat: ServiceStats,
     previous_stat: Optional[ServiceStats] = None,
     preference: Optional[NotificationPreference] = None,
+    service_url: Optional[str] = None,
 ) -> bool:
     """Envoie une notification pour un service selon ses préférences"""
     if not preference:
@@ -66,18 +67,26 @@ async def send_service_notification(
         return False
 
     emoji = "🔴" if is_down else "🟢"
-    status = "hors ligne" if is_down else "en ligne"
-    message = f"{emoji} {service_name} est {status}"
-    
+    status = "offline" if is_down else "online"
+
+    message_parts = [
+        f"*Service Status*: {emoji}",
+        f"*{service_name}* is currently *{status}*.",
+        f"*URL*: <{service_url}|{service_url}>",
+        "",
+        f"Message delivered by: <https://pingmasterjimmydore.netlify.app/dashboard|PingMaster>"
+    ]
+
+    message = "\n".join(message_parts)
+
     if preference.notification_method == NotificationMethod.SLACK:
         success = await send_slack_notification(preference.webhook_url, message)
         
         if success:
-            # Mise à jour du timestamp de dernière notification
             preference.last_alert_time = datetime.utcnow()
             db_session.add(preference)
             db_session.commit()
             
         return success
-    
-    return False 
+
+    return False

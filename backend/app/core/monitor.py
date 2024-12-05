@@ -56,6 +56,7 @@ async def process_service_batch(services: List[Service], semaphore: asyncio.Sema
                 new_stat,
                 previous_stat,
                 service.notification_preferences,
+                service.url
             )
 
             return new_stat
