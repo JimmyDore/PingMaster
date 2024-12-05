@@ -15,3 +15,12 @@ export interface ServiceStats {
 }
 
 export type TimeRange = '1h' | '24h' | '7d' | '30d';
+
+interface ApiService {
+  // ... propriétés existantes ...
+  has_notification: boolean;
+  notification?: {
+    webhook_url: string;
+    alert_frequency: 'DAILY' | 'ALWAYS';
+  };
+}

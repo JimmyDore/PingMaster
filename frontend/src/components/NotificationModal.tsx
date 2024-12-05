@@ -15,6 +15,7 @@ interface NotificationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: NotificationFormData) => Promise<void>;
+  onDelete?: () => Promise<void>;
   initialData?: {
     webhook_url: string;
     alert_frequency: 'daily' | 'always';
@@ -25,7 +26,8 @@ interface NotificationModalProps {
 export default function NotificationModal({ 
   isOpen, 
   onClose, 
-  onSubmit, 
+  onSubmit,
+  onDelete,
   initialData,
   title 
 }: NotificationModalProps) {
@@ -107,16 +109,30 @@ export default function NotificationModal({
                       )}
                     </div>
 
-                    <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                    <div className="mt-5 sm:mt-6 flex flex-col space-y-3">
                       <button
                         type="submit"
-                        className="inline-flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 sm:col-start-2"
+                        className="inline-flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
                       >
-                        Save
+                        Save Changes
                       </button>
+                      
+                      {onDelete && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            await onDelete();
+                            onClose();
+                          }}
+                          className="inline-flex w-full justify-center rounded-md bg-red-100 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-200"
+                        >
+                          Remove Notification
+                        </button>
+                      )}
+
                       <button
                         type="button"
-                        className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                        className="inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
                         onClick={onClose}
                       >
                         Cancel

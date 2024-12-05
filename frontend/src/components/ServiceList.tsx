@@ -14,13 +14,7 @@ interface ApiService {
   name: string;
   url: string;
   refresh_frequency: string;
-  stats: {
-    status: boolean;
-    response_time: number;
-    ping_date: string;
-  }[] | null;
-  has_notification: boolean;
-  notification: {
+  notification_preferences?: {
     webhook_url: string;
     alert_frequency: 'daily' | 'always';
   } | null;
@@ -285,44 +279,34 @@ export default function ServiceList() {
                       Delete
                     </button>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div className="flex items-center space-x-2">
-                      {service.has_notification ? (
-                        <>
-                          <BellIcon className="h-5 w-5 text-green-500" />
-                          <button
-                            onClick={() => {
-                              setSelectedServiceForNotification(service);
-                              setIsEditingNotification(true);
-                              setNotificationModalOpen(true);
-                            }}
-                            className="text-primary-600 hover:text-primary-900"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteNotification(service.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Delete
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <BellSlashIcon className="h-5 w-5 text-gray-400" />
-                          <button
-                            onClick={() => {
-                              setSelectedServiceForNotification(service);
-                              setIsEditingNotification(false);
-                              setNotificationModalOpen(true);
-                            }}
-                            className="text-primary-600 hover:text-primary-900"
-                          >
-                            Add Notification
-                          </button>
-                        </>
-                      )}
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {service.notification_preferences ? (
+                      <div className="flex items-center">
+                        <BellIcon className="h-5 w-5 text-green-500 mr-2" />
+                        <button
+                          onClick={() => {
+                            setSelectedServiceForNotification(service);
+                            setIsEditingNotification(true);
+                            setNotificationModalOpen(true);
+                          }}
+                          className="text-primary-600 hover:text-primary-900 text-sm"
+                        >
+                          Edit Settings
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setSelectedServiceForNotification(service);
+                          setIsEditingNotification(false);
+                          setNotificationModalOpen(true);
+                        }}
+                        className="inline-flex items-center text-primary-600 hover:text-primary-900"
+                      >
+                        <BellSlashIcon className="h-5 w-5 mr-1" />
+                        Add Notification
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -412,8 +396,9 @@ export default function ServiceList() {
           setIsEditingNotification(false);
         }}
         onSubmit={isEditingNotification ? handleEditNotification : handleAddNotification}
-        initialData={selectedServiceForNotification?.notification}
-        title={isEditingNotification ? 'Edit Notification' : 'Add Notification'}
+        onDelete={isEditingNotification ? () => handleDeleteNotification(selectedServiceForNotification?.id) : undefined}
+        initialData={selectedServiceForNotification?.notification_preferences}
+        title={isEditingNotification ? 'Notification Settings' : 'Add Notification'}
       />
     </div>
   );
