@@ -4,9 +4,10 @@ import type { Service, TimeRange } from '../types/service';
 import ServiceChart from './ServiceChart';
 import { Dialog, Transition } from '@headlessui/react'
 import { Fragment } from 'react'
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { ExclamationTriangleIcon, BellIcon, BellSlashIcon } from '@heroicons/react/24/outline'
 import { fetchWithAuth } from '../utils/api';
 import { authService } from '../services/auth';
+import NotificationModal from './NotificationModal';
 
 interface ApiService {
   id: string;
@@ -18,6 +19,11 @@ interface ApiService {
     response_time: number;
     ping_date: string;
   }[] | null;
+  has_notification: boolean;
+  notification: {
+    webhook_url: string;
+    alert_frequency: 'daily' | 'always';
+  } | null;
 }
 
 export default function ServiceList() {
@@ -27,6 +33,9 @@ export default function ServiceList() {
   const [selectedService, setSelectedService] = useState<ApiService | null>(null);
   const [timeRange, setTimeRange] = useState<TimeRange>('1h');
   const [serviceToDelete, setServiceToDelete] = useState<ApiService | null>(null);
+  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
+  const [selectedServiceForNotification, setSelectedServiceForNotification] = useState<ApiService | null>(null);
+  const [isEditingNotification, setIsEditingNotification] = useState(false);
 
   const fetchServices = async () => {
     try {
@@ -95,6 +104,79 @@ export default function ServiceList() {
     }
   };
 
+  const handleAddNotification = async (data: NotificationFormData) => {
+    if (!selectedServiceForNotification) return;
+
+    try {
+      const response = await fetchWithAuth(
+        `${import.meta.env.PUBLIC_API_URL}/services/${selectedServiceForNotification.id}/notifications`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            service_id: selectedServiceForNotification.id,
+            webhook_url: data.webhook_url,
+            alert_frequency: data.alert_frequency,
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error('Failed to add notification');
+      
+      fetchServices(); // Actualiser la liste des services
+      setNotificationModalOpen(false);
+    } catch (error) {
+      console.error('Error adding notification:', error);
+    }
+  };
+
+  const handleEditNotification = async (data: NotificationFormData) => {
+    if (!selectedServiceForNotification) return;
+
+    try {
+      const response = await fetchWithAuth(
+        `${import.meta.env.PUBLIC_API_URL}/services/${selectedServiceForNotification.id}/notifications`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            service_id: selectedServiceForNotification.id,
+            webhook_url: data.webhook_url,
+            alert_frequency: data.alert_frequency,
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error('Failed to update notification');
+      
+      fetchServices();
+      setNotificationModalOpen(false);
+    } catch (error) {
+      console.error('Error updating notification:', error);
+    }
+  };
+
+  const handleDeleteNotification = async (serviceId: string) => {
+    try {
+      const response = await fetchWithAuth(
+        `${import.meta.env.PUBLIC_API_URL}/services/${serviceId}/notifications`,
+        {
+          method: 'DELETE',
+        }
+      );
+
+      if (!response.ok) throw new Error('Failed to delete notification');
+      
+      fetchServices();
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-sm p-6">
@@ -148,6 +230,9 @@ export default function ServiceList() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Notifications
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -199,6 +284,45 @@ export default function ServiceList() {
                     >
                       Delete
                     </button>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="flex items-center space-x-2">
+                      {service.has_notification ? (
+                        <>
+                          <BellIcon className="h-5 w-5 text-green-500" />
+                          <button
+                            onClick={() => {
+                              setSelectedServiceForNotification(service);
+                              setIsEditingNotification(true);
+                              setNotificationModalOpen(true);
+                            }}
+                            className="text-primary-600 hover:text-primary-900"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteNotification(service.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <BellSlashIcon className="h-5 w-5 text-gray-400" />
+                          <button
+                            onClick={() => {
+                              setSelectedServiceForNotification(service);
+                              setIsEditingNotification(false);
+                              setNotificationModalOpen(true);
+                            }}
+                            className="text-primary-600 hover:text-primary-900"
+                          >
+                            Add Notification
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -279,6 +403,18 @@ export default function ServiceList() {
           </div>
         </Dialog>
       </Transition.Root>
+
+      <NotificationModal
+        isOpen={notificationModalOpen}
+        onClose={() => {
+          setNotificationModalOpen(false);
+          setSelectedServiceForNotification(null);
+          setIsEditingNotification(false);
+        }}
+        onSubmit={isEditingNotification ? handleEditNotification : handleAddNotification}
+        initialData={selectedServiceForNotification?.notification}
+        title={isEditingNotification ? 'Edit Notification' : 'Add Notification'}
+      />
     </div>
   );
 }

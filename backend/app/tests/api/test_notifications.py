@@ -129,4 +129,32 @@ def test_get_services_list_with_notifications(client: TestClient, test_service, 
     assert "notification_preferences" in service
     notification = service["notification_preferences"]
     assert notification["service_id"] == str(test_service.id)
-    assert notification["notification_method"] == "slack" 
+    assert notification["notification_method"] == "slack"
+
+def test_delete_notification_preference(client: TestClient, test_notification, test_service, auth_headers):
+    """Test la suppression d'une préférence de notification"""
+    response = client.delete(
+        f"/api/services/{test_service.id}/notifications",
+        headers=auth_headers
+    )
+
+    assert response.status_code == 204
+    
+    # Verify the notification was deleted
+    response = client.get(
+        f"/api/services/{test_service.id}/notifications",
+        headers=auth_headers
+    )
+    assert response.status_code == 404
+    assert "No notification preferences found" in response.json()["detail"]
+
+def test_delete_notification_invalid_service(client: TestClient, auth_headers):
+    """Test la suppression d'une notification pour un service inexistant"""
+    response = client.delete(
+        f"/api/services/{uuid4()}/notifications",
+        headers=auth_headers
+    )
+
+    assert response.status_code == 404
+    assert "Service not found" in response.json()["detail"]
+  

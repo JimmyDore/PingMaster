@@ -67,3 +67,27 @@ async def get_notification_preference(
         raise HTTPException(status_code=404, detail="No notification preferences found")
         
     return preference 
+
+@router.delete("/services/{service_id}/notifications", status_code=204)
+async def delete_notification_preference(
+    service_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Vérifier que le service appartient à l'utilisateur
+    service = db.query(Service)\
+        .filter(Service.id == service_id, Service.user_id == current_user.id)\
+        .first()
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+
+    # Supprimer les préférences de notification
+    result = db.query(NotificationPreference)\
+        .filter(NotificationPreference.service_id == service_id)\
+        .delete()
+    
+    if result == 0:
+        raise HTTPException(status_code=404, detail="No notification preferences found")
+        
+    db.commit()
+    return None 
