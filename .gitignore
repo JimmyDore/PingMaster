@@ -20,6 +20,7 @@ backend/.Python
 backend/*.db
 backend/*.sqlite3
 backend/data/*.db
+test.db
 
 # Dependencies
 **/node_modules/

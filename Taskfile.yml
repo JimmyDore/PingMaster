@@ -77,15 +77,16 @@ tasks:
     desc: Lance les tests backend en mode verbeux et s'arrête à la première erreur
     dir: '{{.BACKEND_DIR}}'
     cmds:
-      - >
-        ../venv/bin/pytest 
-        -v                     # Mode verbeux
-        -s                     # Affiche les prints
-        --no-header            # Supprime l'en-tête pytest
-        --tb=short             # Trace d'erreur courte
-        --maxfail=1           # Arrête strictement après le premier échec
-        --log-cli-level=INFO   # Affiche les logs de niveau INFO
-        --capture=no           # Affiche tous les outputs
+      - |
+        ../venv/bin/pytest \
+        -v \
+        -s \
+        --no-header \
+        --tb=short \
+        --maxfail=1 \
+        --log-cli-level=INFO \
+        --capture=no \
+        {{.CLI_ARGS}}
 
   preview:
     desc: Preview la build du frontend

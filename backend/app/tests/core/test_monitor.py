@@ -15,22 +15,24 @@ from app.db.models import Service, ServiceStats, RefreshFrequency
 
 # Fixtures
 @pytest.fixture
-def mock_service():
+def mock_service(test_user):
     return Service(
         id=uuid.uuid4(),
         name="Test Service",
         url="https://example.com",
-        refresh_frequency=RefreshFrequency.ONE_MINUTE
+        refresh_frequency=RefreshFrequency.ONE_MINUTE,
+        user_id=test_user.id
     )
 
 @pytest.fixture
-def mock_services():
+def mock_services(test_user):
     return [
         Service(
             id=uuid.uuid4(),
             name=f"Test Service {i}",
             url=f"https://example{i}.com",
-            refresh_frequency=RefreshFrequency.ONE_MINUTE
+            refresh_frequency=RefreshFrequency.ONE_MINUTE,
+            user_id=test_user.id
         )
         for i in range(5)
     ]
@@ -182,14 +184,15 @@ async def test_check_services_respects_frequency(test_db, mock_service):
         assert len(stats) == 1  # Seulement la stat initiale
 
 @pytest.mark.asyncio
-async def test_check_services_batch_processing(test_db):
+async def test_check_services_batch_processing(test_db, test_user):
     # Crée 100 services pour tester le traitement par lots
     services = [
         Service(
             id=uuid.uuid4(),
             name=f"Test Service {i}",
             url=f"https://example{i}.com",
-            refresh_frequency=RefreshFrequency.ONE_MINUTE
+            refresh_frequency=RefreshFrequency.ONE_MINUTE,
+            user_id=test_user.id
         )
         for i in range(100)
     ]

@@ -4,6 +4,10 @@ from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 from app.db.session import Base, get_db
 from app.main import app
+from app.db.models import RefreshFrequency, User, Service
+from app.core.auth import get_password_hash, create_access_token
+from datetime import timedelta
+from uuid import uuid4
 
 SQLITE_TEST_URL = "sqlite:///./test.db"
 
@@ -14,13 +18,54 @@ def test_db():
     Base.metadata.create_all(bind=engine)
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     
-    # Créer et retourner une session de test
     db = TestingSessionLocal()
     try:
         yield db
     finally:
         db.close()
         Base.metadata.drop_all(bind=engine)
+
+@pytest.fixture
+def test_user(test_db):
+    """Create a test user and return it"""
+    user = User(
+        username="testuser",
+        hashed_password=get_password_hash("testpass")
+    )
+    test_db.add(user)
+    test_db.commit()
+    test_db.refresh(user)
+    return user
+
+@pytest.fixture
+def test_user2(test_db):
+    """Create a second test user for testing isolation"""
+    user = User(
+        username="testuser2",
+        hashed_password=get_password_hash("testpass2")
+    )
+    test_db.add(user)
+    test_db.commit()
+    test_db.refresh(user)
+    return user
+
+@pytest.fixture
+def auth_headers(test_user):
+    """Generate authentication headers for test user"""
+    access_token = create_access_token(
+        data={"sub": str(test_user.id)},
+        expires_delta=timedelta(minutes=30)
+    )
+    return {"Authorization": f"Bearer {access_token}"}
+
+@pytest.fixture
+def auth_headers2(test_user2):
+    """Generate authentication headers for second test user"""
+    access_token = create_access_token(
+        data={"sub": str(test_user2.id)},
+        expires_delta=timedelta(minutes=30)
+    )
+    return {"Authorization": f"Bearer {access_token}"}
 
 @pytest.fixture
 def client(test_db):
@@ -33,3 +78,17 @@ def client(test_db):
             
     app.dependency_overrides[get_db] = override_get_db
     return TestClient(app)
+
+@pytest.fixture
+def mock_services(test_user):
+    """Create mock services with a valid user_id"""
+    return [
+        Service(
+            id=uuid4(),
+            name=f"Test Service {i}",
+            url=f"https://example{i}.com",
+            refresh_frequency=RefreshFrequency.ONE_MINUTE,
+            user_id=test_user.id
+        )
+        for i in range(3)
+    ]

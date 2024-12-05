@@ -8,20 +8,21 @@ from app.db.models import Service, RefreshFrequency, ServiceStats
 from app.api.models.service import ServiceCreate, ServiceResponse, ServiceStatsCreate, ServiceStatsResponse, ServiceStatsAggregated
 from app.core.monitor import calculate_period_stats
 from datetime import datetime, timedelta
+from app.core.auth import get_current_user
+from app.db.models import User
 
 router = APIRouter()
-
-MOCK_USER_ID = UUID("550e8400-e29b-41d4-a716-446655440000")
 
 @router.post("/services/", response_model=ServiceResponse, status_code=201)
 def create_service(
     service: ServiceCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     db_service = Service(
         name=service.name,
         url=str(service.url),
-        user_id=MOCK_USER_ID,
+        user_id=current_user.id,
         refresh_frequency=service.refresh_frequency
     )
     db.add(db_service)
@@ -30,8 +31,8 @@ def create_service(
     return db_service
 
 @router.get("/services/", response_model=List[ServiceResponse])
-def get_services(db: Session = Depends(get_db)):
-    services = db.query(Service).all()
+def get_services(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    services = db.query(Service).filter(Service.user_id == current_user.id).all()
     
     # Pour chaque service, on récupère toutes ses stats triées par date
     for service in services:
@@ -48,10 +49,11 @@ def get_services(db: Session = Depends(get_db)):
 def create_service_stats(
     service_id: UUID,
     stats: ServiceStatsCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     # Verify that service exists
-    service = db.query(Service).filter(Service.id == service_id).first()
+    service = db.query(Service).filter(Service.id == service_id, Service.user_id == current_user.id).first()
     if not service:
         raise HTTPException(status_code=404, detail="Service not found")
     
@@ -72,9 +74,10 @@ def create_service_stats(
 @router.delete("/services/{service_id}", status_code=204)
 def delete_service(
     service_id: UUID,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    service = db.query(Service).filter(Service.id == service_id).first()
+    service = db.query(Service).filter(Service.id == service_id, Service.user_id == current_user.id).first()
     if not service:
         raise HTTPException(status_code=404, detail="Service not found")
     
@@ -91,9 +94,10 @@ def delete_service(
            response_model=ServiceStatsAggregated)
 async def get_service_stats_aggregated(
     service_id: UUID,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    service = db.query(Service).filter(Service.id == service_id).first()
+    service = db.query(Service).filter(Service.id == service_id, Service.user_id == current_user.id).first()
     if not service:
         raise HTTPException(status_code=404, detail="Service not found")
     
