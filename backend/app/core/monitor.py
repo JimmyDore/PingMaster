@@ -159,24 +159,18 @@ def calculate_period_stats(db: Session, service_id: UUID, start_time: datetime, 
 
     aggregated_data = {}
     if period == "1h":
-        # Agrégation par 10 minutes exactes
+        # Garder tous les points de la dernière heure
         for stat in stats:
-            # Arrondir à la tranche de 10 minutes inférieure
-            minute = (stat.ping_date.minute // 10) * 10
-            ten_min_key = stat.ping_date.replace(
-                minute=minute, 
-                second=0, 
-                microsecond=0
-            )
-            if ten_min_key not in aggregated_data:
-                aggregated_data[ten_min_key] = {"up": 0, "down": 0, "response_times": []}
+            stat_time = stat.ping_date
+            if stat_time not in aggregated_data:
+                aggregated_data[stat_time] = {"up": 0, "down": 0, "response_times": []}
             
             if stat.response_time is not None:
-                aggregated_data[ten_min_key]["response_times"].append(stat.response_time)
+                aggregated_data[stat_time]["response_times"].append(stat.response_time)
             if stat.status:
-                aggregated_data[ten_min_key]["up"] += 1
+                aggregated_data[stat_time]["up"] += 1
             else:
-                aggregated_data[ten_min_key]["down"] += 1
+                aggregated_data[stat_time]["down"] += 1
     elif period == "24h":
         # Garder les données individuelles pour le test sequence
         for stat in stats:

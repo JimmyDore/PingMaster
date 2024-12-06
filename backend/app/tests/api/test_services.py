@@ -476,8 +476,8 @@ def test_get_service_stats_1h_aggregation(client, auth_headers):
     data = response.json()
     stats_1h = data["stats_1h"]
     
-    assert len(stats_1h["timestamps"]) == 7
-    assert len(stats_1h["response_times"]) == 7
+    assert len(stats_1h["timestamps"]) == 60
+    assert len(stats_1h["response_times"]) == 60
     
     # Vérification de l'uptime (~66%)
     assert 60 <= stats_1h["uptime_percentage"] <= 70
