@@ -31,7 +31,8 @@ origins = [
     f"http://127.0.0.1:{port}" for port in range(4321, 4330)
 ] + [
     "http://127.0.0.1:8888",
-    "https://pingmasterjimmydore.netlify.app"
+    "https://pingmasterjimmydore.netlify.app",
+    "https://pingmaster.fr"
 ]
 
 app.add_middleware(
