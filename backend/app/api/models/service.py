@@ -1,6 +1,6 @@
 from pydantic import BaseModel, UUID4, HttpUrl, Field, field_validator
 from datetime import datetime
-from app.db.models import RefreshFrequency, Service
+from app.db.models import RefreshFrequency, Service, ServiceStats
 from typing import List, Optional
 
 from app.api.models.notification import NotificationPreferenceResponse
@@ -33,6 +33,10 @@ class ServiceStatsResponse(ServiceStatsCreate):
 
     class Config:
         from_attributes = True
+
+    @classmethod
+    def from_db(cls, db_stats: ServiceStats):
+        return cls(**db_stats.__dict__)
 
 class ServiceResponse(BaseModel):
     id: UUID4

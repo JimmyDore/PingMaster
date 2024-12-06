@@ -33,7 +33,16 @@ const currentPath = Astro.url.pathname;
         >
           Dashboard
         </a>
-
+        <a 
+          href="/contact" 
+          class={`px-3 py-2 rounded-md text-sm font-medium ${
+            currentPath === '/contact' 
+              ? 'bg-primary-100 text-primary-700' 
+              : 'text-gray-600 hover:text-primary-600'
+          }`}
+        >
+          Contact
+        </a>
         <div id="auth-buttons" class="flex space-x-4">
           <a 
             href="/login" 

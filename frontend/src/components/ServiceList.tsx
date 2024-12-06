@@ -205,11 +205,6 @@ export default function ServiceList() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm p-4">
-        <p className="text-sm text-gray-500">
-          Browser Timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
-        </p>
-      </div>
 
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="overflow-x-auto">

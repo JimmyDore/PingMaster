@@ -45,7 +45,8 @@ def get_services(current_user: User = Depends(get_current_user), db: Session = D
         total_checks = db.query(ServiceStats)\
             .filter(ServiceStats.service_id == service.id)\
             .count()
-        service_response.stats = stats
+        stats_response = [ServiceStatsResponse.from_db(stat) for stat in stats]
+        service_response.stats = stats_response
         service_response.total_checks = total_checks
         services_response.append(service_response)
     
