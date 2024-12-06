@@ -8,6 +8,7 @@ import { ExclamationTriangleIcon, BellIcon, BellSlashIcon } from '@heroicons/rea
 import { fetchWithAuth } from '../utils/api';
 import { authService } from '../services/auth';
 import NotificationModal from './NotificationModal';
+import { parseISO } from 'date-fns';
 
 interface ApiService {
   id: string;
@@ -204,6 +205,12 @@ export default function ServiceList() {
 
   return (
     <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-sm p-4">
+        <p className="text-sm text-gray-500">
+          Browser Timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
+        </p>
+      </div>
+
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -267,7 +274,11 @@ export default function ServiceList() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {service.stats?.[0]?.ping_date
-                      ? format(new Date(service.stats[0].ping_date), 'PPp')
+                      ? format(
+                          parseISO(service.stats[0].ping_date + 'Z'),
+                          'PPp',
+                          { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }
+                        )
                       : '-'
                     }
                   </td>

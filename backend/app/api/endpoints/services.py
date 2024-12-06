@@ -33,18 +33,23 @@ def create_service(
 @router.get("/services/", response_model=List[ServiceResponse])
 def get_services(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     services = db.query(Service).filter(Service.user_id == current_user.id).all()
-    
+    services_response = []
     # Pour chaque service, on récupère uniquement la stat la plus récente
     for service in services:
+        service_response = ServiceResponse.from_db(service)
         stats = db.query(ServiceStats)\
             .filter(ServiceStats.service_id == service.id)\
             .order_by(desc(ServiceStats.ping_date))\
             .limit(1)\
             .all()
-        
-        service.stats = stats
+        total_checks = db.query(ServiceStats)\
+            .filter(ServiceStats.service_id == service.id)\
+            .count()
+        service_response.stats = stats
+        service_response.total_checks = total_checks
+        services_response.append(service_response)
     
-    return services
+    return services_response
 
 @router.post("/services/{service_id}/stats/", response_model=ServiceStatsResponse, status_code=201)
 def create_service_stats(

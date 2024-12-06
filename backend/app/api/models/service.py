@@ -1,6 +1,6 @@
 from pydantic import BaseModel, UUID4, HttpUrl, Field, field_validator
 from datetime import datetime
-from app.db.models import RefreshFrequency
+from app.db.models import RefreshFrequency, Service
 from typing import List, Optional
 
 from app.api.models.notification import NotificationPreferenceResponse
@@ -43,8 +43,21 @@ class ServiceResponse(BaseModel):
     refresh_frequency: RefreshFrequency
     stats: Optional[List[ServiceStatsResponse]] = []
     notification_preferences: Optional[NotificationPreferenceResponse] = None
+    total_checks: Optional[int] = None
     class Config:
         from_attributes = True
+
+    @classmethod
+    def from_db(cls, db_service: Service):
+        return cls(
+            id=db_service.id,
+            name=db_service.name,
+            url=db_service.url,
+            user_id=db_service.user_id,
+            created_at=db_service.created_at,
+            refresh_frequency=db_service.refresh_frequency,
+            notification_preferences=db_service.notification_preferences,
+        )
 
 class AggregatedStats(BaseModel):
     period: str  # '24h', '7d', '30d'

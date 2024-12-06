@@ -57,6 +57,7 @@ interface ApiService {
     response_time: number;
     ping_date: string;
   }[] | null;
+  total_checks: number | null;
 }
 
 export default function DashboardStats() {
@@ -160,6 +161,6 @@ function calculateAvgResponseTime(services: ApiService[]): number {
 
 function calculateTotalChecks(services: ApiService[]): number {
   return services.reduce((total, service) => {
-    return total + (service.stats?.length || 0);
+    return total + (service.total_checks || 0);
   }, 0);
 }
