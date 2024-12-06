@@ -19,6 +19,12 @@ def sign_up(user: UserCreate, db: Session = Depends(get_db)):
             detail="Username already registered"
         )
     
+    if "@" not in user.username or "." not in user.username.split("@")[-1]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username must be a valid email address"
+        )
+    
     # Crée le nouvel utilisateur
     db_user = User(
         username=user.username,

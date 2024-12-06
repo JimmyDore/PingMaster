@@ -8,7 +8,7 @@ def test_sign_up_success(client: TestClient):
     response = client.post(
         "/api/auth/sign-up",
         json={
-            "username": "newuser",
+            "username": "newuser@example.com",
             "password": "testpassword123"
         }
     )
@@ -21,7 +21,7 @@ def test_sign_up_duplicate_username(client: TestClient, test_user):
     response = client.post(
         "/api/auth/sign-up",
         json={
-            "username": "testuser",  # Same username as test_user fixture
+            "username": "testuser@example.com",  # Same username as test_user fixture
             "password": "testpassword123"
         }
     )
@@ -32,7 +32,7 @@ def test_sign_in_success(client: TestClient, test_user):
     response = client.post(
         "/api/auth/sign-in",
         json={
-            "username": "testuser",
+            "username": "testuser@example.com",
             "password": "testpass"
         }
     )
@@ -45,19 +45,26 @@ def test_sign_in_invalid_credentials(client: TestClient):
     response = client.post(
         "/api/auth/sign-in",
         json={
-            "username": "nonexistent",
+            "username": "nonexistent@example.com",
             "password": "wrongpassword"
         }
     )
     assert response.status_code == 401
     assert "Incorrect username or password" in response.json()["detail"]
 
+def test_sign_up_invalid_email(client: TestClient):
+    response = client.post(
+        "/api/auth/sign-up",
+        json={"username": "invalidemail", "password": "testpassword123"}
+    )
+    assert response.status_code == 400
+
 def test_access_services_with_token(client: TestClient):
     # First, create a new user and get token
     signup_response = client.post(
         "/api/auth/sign-up",
         json={
-            "username": "serviceuser",
+            "username": "serviceuser@example.com",
             "password": "testpassword123"
         }
     )
@@ -90,7 +97,7 @@ def test_get_current_user(client: TestClient):
     signup_response = client.post(
         "/api/auth/sign-up",
         json={
-            "username": "meuser",
+            "username": "meuser@example.com",
             "password": "testpassword123"
         }
     )
@@ -103,6 +110,6 @@ def test_get_current_user(client: TestClient):
     )
     assert me_response.status_code == 200
     user_data = me_response.json()
-    assert user_data["username"] == "meuser"
+    assert user_data["username"] == "meuser@example.com"
     assert "id" in user_data
     assert "created_at" in user_data 

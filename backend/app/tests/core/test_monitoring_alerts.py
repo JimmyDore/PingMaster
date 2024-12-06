@@ -73,8 +73,8 @@ async def test_first_ping_service_down(test_db: Session, mock_service_notify_rec
         await check_services(test_db)
         
         mock_slack.assert_called_once()
-        assert "🔴" in mock_slack.call_args[0][1]
-        assert service.name in mock_slack.call_args[0][1]
+        assert "🔴" in str(mock_slack.call_args[0][1])
+        assert service.name in str(mock_slack.call_args[0][1])
 
 @pytest.mark.asyncio
 async def test_first_ping_service_up(test_db: Session, mock_service_notify_recovery_always):
@@ -112,7 +112,7 @@ async def test_transition_up_to_down(test_db: Session, mock_service_notify_recov
         await check_services(test_db)
         
         mock_slack.assert_called_once()
-        assert "🔴" in mock_slack.call_args[0][1]
+        assert "🔴" in str(mock_slack.call_args[0][1])
 
 @pytest.mark.asyncio
 async def test_recovery_notification(test_db: Session, mock_service_notify_recovery_always):
@@ -138,7 +138,7 @@ async def test_recovery_notification(test_db: Session, mock_service_notify_recov
         await check_services(test_db)
         
         mock_slack.assert_called_once()
-        assert "🟢" in mock_slack.call_args[0][1]
+        assert "🟢" in str(mock_slack.call_args[0][1])
 
 @pytest.mark.asyncio
 async def test_no_recovery_notification(test_db: Session, mock_service_notify_no_recovery_daily):

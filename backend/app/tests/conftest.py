@@ -31,7 +31,7 @@ def test_user(test_db):
     """Create a test user and return it"""
     user = User(
         id=uuid.UUID("a3ded56b-a4c6-49ef-8953-b8f1b0648145"),
-        username="testuser",
+        username="testuser@example.com",
         hashed_password=get_password_hash("testpass")
     )
     test_db.add(user)
