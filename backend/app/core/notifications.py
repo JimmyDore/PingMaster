@@ -74,7 +74,7 @@ async def send_service_notification(
         f"*{service_name}* is currently *{status}*.",
         f"*URL*: <{service_url}|{service_url}>",
         "",
-        f"Message delivered by: <https://pingmasterjimmydore.netlify.app/dashboard|PingMaster>"
+        f"Message delivered by: <https://pingmaster.fr/dashboard|PingMaster>"
     ]
 
     message = "\n".join(message_parts)
