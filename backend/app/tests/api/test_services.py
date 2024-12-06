@@ -514,3 +514,29 @@ def test_service_isolation(client: TestClient, auth_headers: dict, auth_headers2
     # Try to access with second user
     response = client.get(f"/api/services/{service_id}/stats/aggregated", headers=auth_headers2)
     assert response.status_code == 404
+
+def test_service_isolation_with_third_user(client: TestClient, auth_headers3: dict):
+    """Test that third user can't access first user's services"""
+    response = client.post(
+        "/api/services/",
+        headers=auth_headers3,
+        json={
+            "name": "Test Service",
+            "url": "https://example.com",
+            "refresh_frequency": RefreshFrequency.ONE_HOUR
+        }
+    )
+    assert response.status_code == 201
+    service_id = response.json()["id"]
+    # Create service with first user
+    response = client.post(
+        f"/api/services/{service_id}/stats/",
+        headers=auth_headers3,
+        json={
+            "service_id": service_id,
+            "status": True,
+            "response_time": 150.0,
+            "ping_date": datetime.utcnow().isoformat()
+        }
+    )
+    assert response.status_code == 403  # Expecting forbidden access

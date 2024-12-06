@@ -1,3 +1,4 @@
+import uuid
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -29,6 +30,7 @@ def test_db():
 def test_user(test_db):
     """Create a test user and return it"""
     user = User(
+        id=uuid.UUID("a3ded56b-a4c6-49ef-8953-b8f1b0648145"),
         username="testuser",
         hashed_password=get_password_hash("testpass")
     )
@@ -41,8 +43,22 @@ def test_user(test_db):
 def test_user2(test_db):
     """Create a second test user for testing isolation"""
     user = User(
+        id=uuid.UUID("667a2f85-9d9a-46dd-9ef8-e92dbb49b2df"),
         username="testuser2",
         hashed_password=get_password_hash("testpass2")
+    )
+    test_db.add(user)
+    test_db.commit()
+    test_db.refresh(user)
+    return user
+
+@pytest.fixture
+def test_user3(test_db):
+    """Create a third test user for testing isolation"""
+    user = User(
+        id=uuid4(),
+        username="testuser3",
+        hashed_password=get_password_hash("testpass3")
     )
     test_db.add(user)
     test_db.commit()
@@ -63,6 +79,15 @@ def auth_headers2(test_user2):
     """Generate authentication headers for second test user"""
     access_token = create_access_token(
         data={"sub": str(test_user2.id)},
+        expires_delta=timedelta(minutes=30)
+    )
+    return {"Authorization": f"Bearer {access_token}"}
+
+@pytest.fixture
+def auth_headers3(test_user3):
+    """Generate authentication headers for third test user"""
+    access_token = create_access_token(
+        data={"sub": str(test_user3.id)},
         expires_delta=timedelta(minutes=30)
     )
     return {"Authorization": f"Bearer {access_token}"}
