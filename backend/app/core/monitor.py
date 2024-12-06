@@ -172,18 +172,18 @@ def calculate_period_stats(db: Session, service_id: UUID, start_time: datetime, 
             else:
                 aggregated_data[stat_time]["down"] += 1
     elif period == "24h":
-        # Garder les données individuelles pour le test sequence
+        # Agrégation par heure pour les dernières 24h
         for stat in stats:
-            stat_time = stat.ping_date
-            if stat_time not in aggregated_data:
-                aggregated_data[stat_time] = {"up": 0, "down": 0, "response_times": []}
+            hour_key = stat.ping_date.replace(minute=0, second=0, microsecond=0)
+            if hour_key not in aggregated_data:
+                aggregated_data[hour_key] = {"up": 0, "down": 0, "response_times": []}
             
             if stat.response_time is not None:
-                aggregated_data[stat_time]["response_times"].append(stat.response_time)
+                aggregated_data[hour_key]["response_times"].append(stat.response_time)
             if stat.status:
-                aggregated_data[stat_time]["up"] += 1
+                aggregated_data[hour_key]["up"] += 1
             else:
-                aggregated_data[stat_time]["down"] += 1
+                aggregated_data[hour_key]["down"] += 1
     else:
         # Code existant pour 7d et 30d
         for stat in stats:

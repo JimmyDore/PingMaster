@@ -379,7 +379,7 @@ def test_create_and_get_service_stats_sequence(client: TestClient, auth_headers:
     stats_24h = data["stats_24h"]
     
     # Vérification du nombre de stats
-    assert len(stats_24h["timestamps"]) == 5
+    assert len(stats_24h["timestamps"]) == 1
     
     # Vérification de l'uptime (3 up sur 5 = 60%)
     assert abs(stats_24h["uptime_percentage"] - 60) <= 1
