@@ -44,11 +44,11 @@ export default function SignUpForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" method="POST">
       <div>
         <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-          Username
+          Email
         </label>
         <input
-          {...register('username', { required: 'Username is required' })}
-          type="text"
+          {...register('username', { required: 'Email address is required' })}
+          type="email"
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
           disabled={success}
         />

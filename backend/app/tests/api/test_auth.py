@@ -26,7 +26,7 @@ def test_sign_up_duplicate_username(client: TestClient, test_user):
         }
     )
     assert response.status_code == 400
-    assert "Username already registered" in response.json()["detail"]
+    assert "Email already registered" in response.json()["detail"]
 
 def test_sign_in_success(client: TestClient, test_user):
     response = client.post(
