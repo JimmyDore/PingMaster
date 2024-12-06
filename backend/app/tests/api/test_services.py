@@ -344,9 +344,11 @@ def test_create_and_get_service_stats_sequence(client: TestClient, auth_headers:
     service_id = service_response.json()["id"]
 
     # Création de 5 stats avec des états alternés
-    base_time = datetime.utcnow()
     expected_states = []
+    base_time = datetime.utcnow()
+    base_time = base_time.replace(hour=base_time.hour - 1, minute=59, second=0, microsecond=0)
     
+
     for i in range(5):
         is_up = i % 2 == 0
         expected_states.append(is_up)
@@ -358,7 +360,7 @@ def test_create_and_get_service_stats_sequence(client: TestClient, auth_headers:
                 "service_id": service_id,
                 "status": is_up,
                 "response_time": 100 + i * 10,
-                "ping_date": (base_time - timedelta(minutes=i*5)).isoformat()
+                "ping_date": (base_time - timedelta(minutes=i*2)).isoformat()
             }
         )
         assert response.status_code == 201
@@ -372,7 +374,6 @@ def test_create_and_get_service_stats_sequence(client: TestClient, auth_headers:
     
     data = stats_response.json()
     stats_24h = data["stats_24h"]
-    
     # Vérification du nombre de stats
     assert len(stats_24h["timestamps"]) == 1
     
