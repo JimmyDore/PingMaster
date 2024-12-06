@@ -6,11 +6,19 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-async def send_slack_notification(webhook_url: str, message: str) -> bool:
-    """Envoie une notification Slack via webhook"""
+async def send_slack_notification(webhook_url: str, message: str | dict) -> bool:
+    """Send a Slack notification via webhook
+    
+    Args:
+        webhook_url: The Slack webhook URL
+        message: Either a string for simple messages or a dict for block-structured messages
+    """
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(webhook_url, json={"text": message})
+            payload = {"text": message} if isinstance(message, str) else message
+            response = await client.post(webhook_url, json=payload)
+            if response.status_code != 200:
+                logger.error(f"Slack API error: {response.status_code} - {response.text}")
             return response.status_code == 200
     except Exception as e:
         logger.error(f"Error sending Slack notification: {str(e)}")
@@ -69,18 +77,41 @@ async def send_service_notification(
     emoji = "🔴" if is_down else "🟢"
     status = "offline" if is_down else "online"
 
-    message_parts = [
-        f"*Service Status*: {emoji}",
-        f"*{service_name}* is currently *{status}*.",
-        f"*URL*: <{service_url}|{service_url}>",
-        "",
-        f"Message delivered by: <https://pingmaster.fr/dashboard|PingMaster>"
+    blocks = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": f"{emoji} Service Status Alert"
+            }
+        },
+        {
+            "type": "section",
+            "fields": [
+                {"type": "mrkdwn", "text": f"*Service Name:*\n{service_name}"},
+                {"type": "mrkdwn", "text": f"*Status:*\n{status.upper()}"},
+            ]
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"*URL:* <{service_url}|{service_url}>"
+            }
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": "Message delivered by: <https://pingmaster.fr/dashboard|PingMaster>"
+                }
+            ]
+        }
     ]
 
-    message = "\n".join(message_parts)
-
     if preference.notification_method == NotificationMethod.SLACK:
-        success = await send_slack_notification(preference.webhook_url, message)
+        success = await send_slack_notification(preference.webhook_url, {"blocks": blocks})
         
         if success:
             preference.last_alert_time = datetime.utcnow()

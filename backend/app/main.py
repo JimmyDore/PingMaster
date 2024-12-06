@@ -4,7 +4,9 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.endpoints import services, auth, notifications
 from app.db.session import init_db, SQLITE_URL, DATA_DIR
-from app.core.scheduler import init_scheduler
+from app.core.scheduler import init_scheduler, scheduler
+from app.core.daily_report import generate_daily_report
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -71,3 +73,9 @@ def startup_event():
         logger.error(f"Error accessing data directory: {str(e)}")
     init_db()
     logger.info("Database initialized")
+
+@app.post("/api/trigger-daily-report")
+def trigger_daily_report():
+    """Manually trigger the daily report generation"""
+    generate_daily_report()
+    return {"message": "Daily report generation triggered successfully"}

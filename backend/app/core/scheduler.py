@@ -1,6 +1,7 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from app.core.monitor import check_services
+from app.core.daily_report import generate_daily_report
 from app.db.session import SessionLocal
 import logging
 
@@ -29,6 +30,12 @@ def init_scheduler():
             id='monitoring_job',
             name='Check all services status',
             replace_existing=True
+        )
+        scheduler.add_job(
+            generate_daily_report,
+            CronTrigger(hour=9, minute=0),
+            id='daily_report',
+            replace_existing=True,
         )
         
         # Démarre le scheduler
