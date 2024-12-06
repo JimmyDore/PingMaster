@@ -201,14 +201,9 @@ def test_get_services_with_multiple_stats(client: TestClient, test_db: Session, 
     service_data = data[0]
     
     # Vérifier que les stats sont présentes et triées
-    assert len(service_data["stats"]) == 2
+    assert len(service_data["stats"]) == 1
     assert service_data["stats"][0]["response_time"] == 200.0  # La plus récente
-    assert service_data["stats"][1]["response_time"] == 100.0  # La plus ancienne
-    
-    # Vérifier l'ordre des dates
-    first_date = datetime.fromisoformat(service_data["stats"][0]["ping_date"])
-    second_date = datetime.fromisoformat(service_data["stats"][1]["ping_date"])
-    assert first_date > second_date
+
 
 def test_delete_service(client: TestClient, auth_headers: dict):
     # Create a test service first

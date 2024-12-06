@@ -34,11 +34,12 @@ def create_service(
 def get_services(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     services = db.query(Service).filter(Service.user_id == current_user.id).all()
     
-    # Pour chaque service, on récupère toutes ses stats triées par date
+    # Pour chaque service, on récupère uniquement la stat la plus récente
     for service in services:
         stats = db.query(ServiceStats)\
             .filter(ServiceStats.service_id == service.id)\
             .order_by(desc(ServiceStats.ping_date))\
+            .limit(1)\
             .all()
         
         service.stats = stats
