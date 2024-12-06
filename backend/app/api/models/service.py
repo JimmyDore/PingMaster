@@ -1,4 +1,4 @@
-from pydantic import BaseModel, UUID4, HttpUrl, Field, validator
+from pydantic import BaseModel, UUID4, HttpUrl, Field, field_validator
 from datetime import datetime
 from app.db.models import RefreshFrequency
 from typing import List, Optional
@@ -16,7 +16,13 @@ class ServiceStatsCreate(BaseModel):
     response_time: Optional[float] = Field(None, ge=0)
     ping_date: datetime
 
-    @validator('ping_date')
+    @field_validator('response_time')
+    def round_response_time(cls, v):
+        if v is not None:
+            return round(v, 1)
+        return v
+
+    @field_validator('ping_date')
     def validate_ping_date(cls, v):
         if v > datetime.utcnow():
             raise ValueError("ping_date cannot be in the future")
