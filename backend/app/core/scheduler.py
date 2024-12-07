@@ -33,7 +33,7 @@ def init_scheduler():
         )
         scheduler.add_job(
             generate_daily_report,
-            CronTrigger(hour=9, minute=0),
+            CronTrigger(hour=7, minute=0),
             id='daily_report',
             replace_existing=True,
         )
