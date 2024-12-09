@@ -11,7 +11,30 @@ const currentPath = Astro.url.pathname;
         </a>
       </div>
       
-      <div class="flex space-x-4" id="nav-links">
+      <!-- Mobile menu button -->
+      <button 
+        id="mobile-menu-button" 
+        class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-primary-600 hover:bg-gray-100"
+        aria-label="Main menu"
+      >
+        <svg 
+          class="h-6 w-6" 
+          stroke="currentColor" 
+          fill="none" 
+          viewBox="0 0 24 24"
+          id="menu-icon"
+        >
+          <path 
+            stroke-linecap="round" 
+            stroke-linejoin="round" 
+            stroke-width="2" 
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
+
+      <!-- Desktop navigation -->
+      <div class="hidden md:flex space-x-4" id="desktop-nav">
         <a 
           href="/" 
           class={`px-3 py-2 rounded-md text-sm font-medium ${
@@ -74,38 +97,138 @@ const currentPath = Astro.url.pathname;
         </button>
       </div>
     </div>
+
+    <!-- Mobile menu -->
+    <div class="hidden md:hidden" id="mobile-menu">
+      <div class="px-2 pt-2 pb-3 space-y-1">
+        <a 
+          href="/" 
+          class={`block px-3 py-2 rounded-md text-base font-medium ${
+            currentPath === '/' 
+              ? 'bg-primary-100 text-primary-700' 
+              : 'text-gray-600 hover:text-primary-600'
+          }`}
+        >
+          Home
+        </a>
+        
+        <a 
+          href="/dashboard" 
+          class={`block px-3 py-2 rounded-md text-base font-medium hidden auth-required ${
+            currentPath === '/dashboard' 
+              ? 'bg-primary-100 text-primary-700' 
+              : 'text-gray-600 hover:text-primary-600'
+          }`}
+        >
+          Dashboard
+        </a>
+        
+        <a 
+          href="/contact" 
+          class={`block px-3 py-2 rounded-md text-base font-medium ${
+            currentPath === '/contact' 
+              ? 'bg-primary-100 text-primary-700' 
+              : 'text-gray-600 hover:text-primary-600'
+          }`}
+        >
+          Contact
+        </a>
+
+        <div id="mobile-auth-buttons" class="space-y-1">
+          <a 
+            href="/login" 
+            class={`block px-3 py-2 rounded-md text-base font-medium ${
+              currentPath === '/login'
+                ? 'bg-primary-100 text-primary-700'
+                : 'text-gray-600 hover:text-primary-600'
+            }`}
+          >
+            Login
+          </a>
+          <a 
+            href="/signup" 
+            class={`block px-3 py-2 rounded-md text-base font-medium ${
+              currentPath === '/signup'
+                ? 'bg-primary-100 text-primary-700'
+                : 'text-gray-600 hover:text-primary-600'
+            }`}
+          >
+            Sign up
+          </a>
+        </div>
+
+        <button
+          id="mobile-logout-button"
+          class="hidden w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-primary-600"
+        >
+          Logout
+        </button>
+      </div>
+    </div>
   </div>
 </nav>
 
 <script>
   import { authService } from '../services/auth';
 
+  const mobileMenuButton = document.getElementById('mobile-menu-button');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const menuIcon = document.getElementById('menu-icon');
+
+  function toggleMenu() {
+    if (!mobileMenu || !menuIcon) return;
+    
+    const isOpen = mobileMenu.classList.contains('hidden');
+    
+    if (isOpen) {
+      mobileMenu.classList.remove('hidden');
+      menuIcon.setAttribute('viewBox', '0 0 24 24');
+      menuIcon.innerHTML = `
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      `;
+    } else {
+      mobileMenu.classList.add('hidden');
+      menuIcon.setAttribute('viewBox', '0 0 24 24');
+      menuIcon.innerHTML = `
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      `;
+    }
+  }
+
+  mobileMenuButton?.addEventListener('click', toggleMenu);
+
   function updateNavigation() {
     const isAuthenticated = authService.isAuthenticated();
     const authButtons = document.getElementById('auth-buttons');
+    const mobileAuthButtons = document.getElementById('mobile-auth-buttons');
     const logoutButton = document.getElementById('logout-button');
+    const mobileLogoutButton = document.getElementById('mobile-logout-button');
     const authRequiredElements = document.querySelectorAll('.auth-required');
 
     if (isAuthenticated) {
       if (authButtons) authButtons.classList.add('hidden');
+      if (mobileAuthButtons) mobileAuthButtons.classList.add('hidden');
       if (logoutButton) logoutButton.classList.remove('hidden');
+      if (mobileLogoutButton) mobileLogoutButton.classList.remove('hidden');
       authRequiredElements.forEach(el => el.classList.remove('hidden'));
     } else {
       if (authButtons) authButtons.classList.remove('hidden');
+      if (mobileAuthButtons) mobileAuthButtons.classList.remove('hidden');
       if (logoutButton) logoutButton.classList.add('hidden');
+      if (mobileLogoutButton) mobileLogoutButton.classList.add('hidden');
       authRequiredElements.forEach(el => el.classList.add('hidden'));
     }
   }
 
   updateNavigation();
 
-  const logoutButton = document.getElementById('logout-button');
-  if (logoutButton) {
-    logoutButton.addEventListener('click', () => {
+  const logoutButtons = document.querySelectorAll('#logout-button, #mobile-logout-button');
+  logoutButtons.forEach(button => {
+    button.addEventListener('click', () => {
       authService.removeToken();
       window.location.href = '/';
     });
-  }
+  });
 
   document.addEventListener('auth-changed', updateNavigation);
 </script>
