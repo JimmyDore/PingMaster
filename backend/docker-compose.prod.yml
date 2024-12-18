@@ -7,12 +7,14 @@ services:
       dockerfile: Dockerfile
     image: pingmaster-api:latest
     restart: always
-    environment:
-      - ENV_FILE=.env.prod
+    env_file:
+      - .env.prod
     ports:
       - "8000:8000"
     volumes:
       - ./data:/app/data
+      - ./.env.prod:/app/.env.prod
+
     user: "${UID}:${GID}"
     networks:
       - api_network

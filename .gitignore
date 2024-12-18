@@ -34,6 +34,7 @@ test.db
 # Environment variables
 **/.env
 **/.env.production
+**/.env.prod
 **/.env.local
 **/.env.development
 

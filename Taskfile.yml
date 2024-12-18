@@ -42,7 +42,7 @@ tasks:
     desc: Lance le serveur de développement backend
     dir: '{{.BACKEND_DIR}}'
     cmds:
-      - ../venv/bin/uvicorn app.main:app --reload --port 8000
+      - ../venv/bin/uvicorn app.main:app --reload --port 8000 --env-file .env.local
 
   build:
     desc: Build le projet

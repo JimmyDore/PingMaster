@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import logging
+import os
 from sqlalchemy import func
 from app.db.session import SessionLocal
 from app.db.models import User, Service, ServiceStats
@@ -71,10 +72,10 @@ def format_slack_message(stats):
 async def generate_daily_report():
     """Generate and send daily report to Slack"""
     try:
+        sentry_webhook_url = os.getenv("SENTRY_WEBHOOK_URL_MONITORING")
         stats = get_daily_stats()
         message = format_slack_message(stats)
-        # FIXME: Pass the webhook URL as an environment variable
-        await send_slack_notification("https://hooks.slack.com/services/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", message)
+        await send_slack_notification(sentry_webhook_url, message)
         logger.info("Daily report sent successfully")
     except Exception as e:
         logger.error(f"Error generating daily report: {str(e)}")
