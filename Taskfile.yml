@@ -142,7 +142,22 @@ tasks:
       - ssh {{.PROD_HOST}} "docker exec {{.CONTAINER_NAME}} ls -la /app/data"
 
   logs:prod:
-    desc: View production logs
+    desc: View last 50 production logs
+    cmds:
+      - ssh {{.PROD_HOST}} "docker logs --tail 50 {{.CONTAINER_NAME}}"
+
+  logs:prod:follow:
+    desc: Follow production logs in real-time
+    cmds:
+      - ssh {{.PROD_HOST}} "docker logs --tail 10 -f {{.CONTAINER_NAME}}"
+
+  logs:prod:recent:
+    desc: View logs from last 5 minutes
+    cmds:
+      - ssh {{.PROD_HOST}} "docker logs --since 5m {{.CONTAINER_NAME}}"
+
+  logs:prod:all:
+    desc: View all production logs (use with caution)
     cmds:
       - ssh {{.PROD_HOST}} "docker logs {{.CONTAINER_NAME}}"
 

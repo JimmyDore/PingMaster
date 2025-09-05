@@ -216,3 +216,6 @@ def calculate_period_stats(db: Session, service_id: UUID, start_time: datetime, 
                        if data["response_times"] else 0 
                        for data in [aggregated_data[ts] for ts in sorted(aggregated_data.keys())]]
     ) 
+
+if __name__ == "__main__":
+    asyncio.run(monitor_loop())

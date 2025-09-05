@@ -49,3 +49,5 @@ test.db
 
 # Cache
 **/.cache/
+
+.specstory/
