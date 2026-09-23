@@ -51,6 +51,11 @@ app.include_router(services.router, prefix="/api")
 app.include_router(auth.router, prefix="/api/auth")
 app.include_router(notifications.router, prefix="/api")
 
+@app.get("/health")
+def health():
+    """Liveness probe for the Docker healthcheck and hub.jimmydore.fr's site check."""
+    return {"status": "ok"}
+
 @app.on_event("startup")
 async def start_scheduler():
     """Start the scheduler on application startup"""
