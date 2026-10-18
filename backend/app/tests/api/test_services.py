@@ -540,3 +540,31 @@ def test_service_isolation_with_third_user(client: TestClient, auth_headers3: di
         }
     )
     assert response.status_code == 403  # Expecting forbidden access
+@pytest.mark.parametrize("url", [
+    "http://127.0.0.1:8000/health",
+    "http://169.254.169.254/latest/meta-data/",
+    "http://10.0.0.1/",
+    "http://[::1]/",
+    "http://[::ffff:127.0.0.1]/",
+])
+def test_create_service_rejects_internal_ip(client: TestClient, auth_headers: dict, url: str):
+    response = client.post(
+        "/api/services/",
+        headers=auth_headers,
+        json={"name": "Internal", "url": url, "refresh_frequency": RefreshFrequency.ONE_MINUTE}
+    )
+    assert response.status_code == 400
+    assert "not allowed" in response.json()["detail"]
+
+    # Nothing must have been stored
+    assert client.get("/api/services/", headers=auth_headers).json() == []
+
+def test_create_service_rejects_hostname_resolving_to_private_ip(client: TestClient, auth_headers: dict, fake_dns):
+    fake_dns["intranet.example.com"] = ["192.168.1.10"]
+    response = client.post(
+        "/api/services/",
+        headers=auth_headers,
+        json={"name": "Intranet", "url": "https://intranet.example.com", "refresh_frequency": RefreshFrequency.ONE_HOUR}
+    )
+    assert response.status_code == 400
+    assert "not allowed" in response.json()["detail"]

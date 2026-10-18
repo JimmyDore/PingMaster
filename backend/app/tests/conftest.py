@@ -1,3 +1,9 @@
+import os
+import socket
+
+# Must be set before any app module is imported: app.core.auth refuses to load without it.
+os.environ.setdefault("JWT_SECRET_KEY", "test-only-jwt-secret-key-never-used-in-production")
+
 import uuid
 import pytest
 from sqlalchemy import create_engine
@@ -11,6 +17,34 @@ from datetime import timedelta
 from uuid import uuid4
 
 SQLITE_TEST_URL = "sqlite:///./test.db"
+PUBLIC_TEST_IP = "93.184.216.34"
+
+@pytest.fixture(autouse=True)
+def fake_dns(monkeypatch):
+    """Replace DNS resolution so tests never hit the network.
+
+    Every hostname resolves to PUBLIC_TEST_IP unless the test maps it in the
+    returned dict, e.g. fake_dns["internal.example"] = ["10.0.0.1"].
+    An empty list makes the hostname unresolvable.
+    """
+    records: dict[str, list[str]] = {}
+
+    def fake_getaddrinfo(host, port, *args, **kwargs):
+        if isinstance(host, bytes):
+            host = host.decode()
+        addresses = records.get(host, [PUBLIC_TEST_IP])
+        if not addresses:
+            raise socket.gaierror(socket.EAI_NONAME, "Name or service not known")
+        results = []
+        for address in addresses:
+            if ":" in address:
+                results.append((socket.AF_INET6, socket.SOCK_STREAM, 6, "", (address, port or 0, 0, 0)))
+            else:
+                results.append((socket.AF_INET, socket.SOCK_STREAM, 6, "", (address, port or 0)))
+        return results
+
+    monkeypatch.setattr(socket, "getaddrinfo", fake_getaddrinfo)
+    return records
 
 @pytest.fixture
 def test_db():

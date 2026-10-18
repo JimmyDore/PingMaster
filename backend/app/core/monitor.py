@@ -10,6 +10,7 @@ from typing import List, Dict, Tuple
 from sqlalchemy import func
 from uuid import UUID
 from app.core.notifications import send_service_notification
+from app.core.url_safety import UnsafeURLError, assert_public_url_async
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,13 @@ BATCH_SIZE = 50  # Nombre de services traités par lot
 async def ping_service(service: Service) -> tuple[bool, float | None]:
     """Ping a service and return its status and response time."""
     try:
-        async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
+        await assert_public_url_async(str(service.url))
+    except UnsafeURLError as e:
+        logger.warning(f"Refusing to ping service {service.name}: {str(e)}")
+        return False, None
+
+    try:
+        async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT, follow_redirects=False) as client:
             start_time = datetime.utcnow()
             response = await client.get(str(service.url))
             end_time = datetime.utcnow()

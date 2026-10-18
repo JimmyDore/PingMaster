@@ -11,6 +11,7 @@ from app.core.monitor import calculate_period_stats
 from datetime import datetime, timedelta
 from app.core.auth import get_current_user
 from app.db.models import User
+from app.core.url_safety import UnsafeURLError, assert_public_url
 
 router = APIRouter()
 
@@ -20,6 +21,11 @@ def create_service(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    try:
+        assert_public_url(str(service.url))
+    except UnsafeURLError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid service URL: {str(e)}")
+
     db_service = Service(
         name=service.name,
         url=str(service.url),

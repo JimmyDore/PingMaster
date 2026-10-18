@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import httpx
 from app.db.models import NotificationMethod, AlertFrequency, NotificationPreference, ServiceStats
 from typing import Optional
+from app.core.url_safety import UnsafeURLError, assert_public_url_async
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,13 @@ async def send_slack_notification(webhook_url: str, message: str | dict) -> bool
         message: Either a string for simple messages or a dict for block-structured messages
     """
     try:
-        async with httpx.AsyncClient() as client:
+        await assert_public_url_async(webhook_url)
+    except UnsafeURLError as e:
+        logger.warning(f"Skipping Slack notification to unsafe webhook URL: {str(e)}")
+        return False
+
+    try:
+        async with httpx.AsyncClient(follow_redirects=False) as client:
             payload = {"text": message} if isinstance(message, str) else message
             response = await client.post(webhook_url, json=payload)
             if response.status_code != 200:

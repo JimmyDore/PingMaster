@@ -40,6 +40,7 @@ jobs:
             cat > .env.prod << EOL
             ENVIRONMENT=prod
             SENTRY_WEBHOOK_URL_MONITORING=${{ secrets.SENTRY_WEBHOOK_URL_MONITORING }}
+            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
             EOL
 
 

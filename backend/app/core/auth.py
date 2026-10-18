@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import Depends, HTTPException, status
@@ -10,7 +11,24 @@ from app.db.models import User
 from uuid import UUID
 
 # Configuration
-SECRET_KEY = "your-secret-key-here"  # À changer en production
+MIN_SECRET_KEY_LENGTH = 32
+
+def load_secret_key() -> str:
+    """Read the JWT signing key from JWT_SECRET_KEY; refuse to start without a strong one."""
+    secret_key = os.getenv("JWT_SECRET_KEY")
+    if not secret_key:
+        raise RuntimeError(
+            "JWT_SECRET_KEY environment variable is not set; refusing to start. "
+            "Generate one with: python -c 'import secrets; print(secrets.token_urlsafe(64))'"
+        )
+    if len(secret_key) < MIN_SECRET_KEY_LENGTH:
+        raise RuntimeError(
+            f"JWT_SECRET_KEY must be at least {MIN_SECRET_KEY_LENGTH} characters long "
+            f"(got {len(secret_key)}); refusing to start."
+        )
+    return secret_key
+
+SECRET_KEY = load_secret_key()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

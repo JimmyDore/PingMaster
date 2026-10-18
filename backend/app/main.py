@@ -13,10 +13,19 @@ from app.db.models import User
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+PRODUCTION_ENVIRONMENTS = {"prod", "production"}
+
+def docs_settings(environment: str | None) -> dict:
+    """Hide /docs, /redoc and /openapi.json in production."""
+    if (environment or "").strip().lower() in PRODUCTION_ENVIRONMENTS:
+        return {"docs_url": None, "redoc_url": None, "openapi_url": None}
+    return {}
+
 app = FastAPI(
     title="MonitoringDashboard API",
     description="Backend API for Monitoring Dashboard",
-    version="0.1.0"
+    version="0.1.0",
+    **docs_settings(os.getenv("ENVIRONMENT"))
 )
 
 # Middleware pour logger les requêtes

@@ -4,6 +4,7 @@ from app.db.session import get_db
 from app.db.models import NotificationPreference, Service, User
 from app.api.models.notification import NotificationPreferenceCreate, NotificationPreferenceResponse
 from app.core.auth import get_current_user
+from app.core.url_safety import UnsafeURLError, assert_public_url_async
 from uuid import UUID
 
 router = APIRouter()
@@ -22,16 +23,24 @@ async def create_notification_preference(
     if not service:
         raise HTTPException(status_code=404, detail="Service not found")
 
+    try:
+        await assert_public_url_async(preference.webhook_url)
+    except UnsafeURLError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid webhook URL: {str(e)}")
+
+    # Le service_id du body est ignoré : seul celui du chemin (dont la propriété est vérifiée) fait foi
+    preference_data = preference.model_dump(exclude={"service_id"})
+
     # Créer ou mettre à jour les préférences
     db_preference = db.query(NotificationPreference)\
         .filter(NotificationPreference.service_id == service_id)\
         .first()
         
     if db_preference:
-        for key, value in preference.model_dump().items():
+        for key, value in preference_data.items():
             setattr(db_preference, key, value)
     else:
-        db_preference = NotificationPreference(**preference.model_dump())
+        db_preference = NotificationPreference(service_id=service_id, **preference_data)
         db.add(db_preference)
         
     db.commit()

@@ -209,3 +209,40 @@ async def test_check_services_batch_processing(test_db, test_user):
         assert len(stats) == 100
         # Vérifie que les services ont été traités par lots
         assert mock_ping.call_count == 100 
+# Tests SSRF : ping_service ne doit jamais contacter une adresse interne
+@pytest.mark.asyncio
+@pytest.mark.parametrize("address", ["127.0.0.1", "10.0.0.1", "169.254.169.254", "::1", "::ffff:127.0.0.1"])
+async def test_ping_service_blocks_non_public_address(mock_service, fake_dns, address, caplog):
+    fake_dns["example.com"] = [address]
+    with patch('httpx.AsyncClient.get') as mock_get, \
+         caplog.at_level("WARNING", logger="app.core.monitor"):
+        status, response_time = await ping_service(mock_service)
+
+    assert status is False
+    assert response_time is None
+    mock_get.assert_not_called()
+    assert any(r.levelname == "WARNING" for r in caplog.records)
+
+@pytest.mark.asyncio
+async def test_ping_service_blocks_private_ip_literal(test_user):
+    service = Service(
+        id=uuid.uuid4(),
+        name="Metadata",
+        url="http://169.254.169.254/latest/meta-data/",
+        refresh_frequency=RefreshFrequency.ONE_MINUTE,
+        user_id=test_user.id
+    )
+    with patch('httpx.AsyncClient.get') as mock_get:
+        status, response_time = await ping_service(service)
+
+    assert (status, response_time) == (False, None)
+    mock_get.assert_not_called()
+
+@pytest.mark.asyncio
+async def test_ping_service_does_not_follow_redirects(mock_service):
+    with patch('app.core.monitor.httpx.AsyncClient') as mock_client_cls:
+        client = mock_client_cls.return_value.__aenter__.return_value
+        client.get = AsyncMock(return_value=Mock(status_code=200))
+        await ping_service(mock_service)
+
+    assert mock_client_cls.call_args.kwargs["follow_redirects"] is False
