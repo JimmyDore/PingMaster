@@ -1,11 +1,13 @@
 import logging
 import os
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.endpoints import services, auth, notifications
 from app.db.session import init_db, SQLITE_URL, DATA_DIR
 from app.core.scheduler import init_scheduler, scheduler
 from app.core.daily_report import generate_daily_report
+from app.core.auth import get_current_user
+from app.db.models import User
 
 
 logging.basicConfig(level=logging.INFO)
@@ -80,7 +82,7 @@ def startup_event():
     logger.info("Database initialized")
 
 @app.post("/api/trigger-daily-report")
-def trigger_daily_report():
-    """Manually trigger the daily report generation"""
-    generate_daily_report()
+async def trigger_daily_report(current_user: User = Depends(get_current_user)):
+    """Manually trigger the daily report generation (authenticated users only)"""
+    await generate_daily_report()
     return {"message": "Daily report generation triggered successfully"}
