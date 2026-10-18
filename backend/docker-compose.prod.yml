@@ -15,7 +15,7 @@ services:
       - ./data:/app/data
       - ./.env.prod:/app/.env.prod
 
-    user: "${UID}:${GID}"
+    user: "${UID:-1000}:${GID:-1000}"  # uid 1000 owns ./data on the VPS
     networks:
       - api_network
     # healthcheck:
